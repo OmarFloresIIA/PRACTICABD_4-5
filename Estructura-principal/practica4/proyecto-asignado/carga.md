@@ -38,6 +38,22 @@ La tabla `warehouse.fact_obra_mensual` se llena mediante `COPY`, con 29,928 regi
 
 El script muestra el total final por tabla y separa los catálogos precargados por el DDL. También informa las 3,421 evidencias representadas en los snapshots y el total de filas rechazadas. En una ejecución correcta, el generador indica cero filas rechazadas; cualquier error de restricción revierte toda la carga.
 
+## Comparación con el artículo
+
+| Indicador | Artículo / generador | Resultado de la base | Estado |
+|---|---:|---:|---|
+| Obras públicas | 1,247 | Pendiente de ejecución | Por comprobar |
+| Comunidades | 55 | Pendiente de ejecución | Por comprobar |
+| Eventos de auditoría generados directamente | 8,934 | Pendiente de ejecución | Por comprobar |
+| Evidencias representadas en snapshots | 3,421 | Pendiente de ejecución | Por comprobar |
+| Presupuesto total | $127,400,000 MXN | Pendiente de ejecución | Por comprobar |
+| Pobladores | 2,341 | Pendiente de ejecución | Por comprobar |
+| Propuestas | 2,156 | Pendiente de ejecución | Por comprobar |
+| Votos | 8,723 | Pendiente de ejecución | Por comprobar |
+| Snapshots obra-mes | 29,928 | Pendiente de ejecución | Por comprobar |
+
+El artículo indica que los 8,934 eventos son los generados directamente por el escenario; los disparadores del sistema operacional pueden agregar más eventos a la tabla de hechos. Por eso no debe compararse el total final de esa tabla como si solo contuviera los 8,934 eventos directos. La población mensual sí se calcula como 1,247 obras por 24 meses, es decir, 29,928 filas.
+
 La captura de terminal debe mostrar:
 1. La finalización de la carga.
 2. Los conteos de tablas.
