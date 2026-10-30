@@ -8,11 +8,11 @@ No se encontró un conjunto publicado que represente el caso de la empresa del p
 
 Se revisaron repositorios académicos y conjuntos de datos de comercio y ventas. Entre los términos de búsqueda utilizados se encuentran:
 
-- \`industrial sales orders dataset customers products shipments transporters public CSV\`
-- \`manufacturing sales orders dataset freight shipping branches open data\`
-- \`public industrial equipment sales dataset invoice product quantity unit price customer\`
-- \`UCI Online Retail II\`
-- \`online retail transactional dataset invoice customer product country\`
+- `industrial sales orders dataset customers products shipments transporters public CSV`
+- `manufacturing sales orders dataset freight shipping branches open data`
+- `public industrial equipment sales dataset invoice product quantity unit price customer`
+- `UCI Online Retail II`
+- `online retail transactional dataset invoice customer product country`
 
 ### Candidato revisado y descartado: Online Retail II
 
@@ -23,10 +23,10 @@ Chen, D. (2012). *Online Retail II* [Conjunto de datos]. UCI Machine Learning Re
 - **Institución:** UCI Machine Learning Repository.
 - **Autor:** Daqing Chen.
 - **Consulta:** 30 de octubre de 2026.
-- **Formato y tamaño:** libro de Excel \`online_retail_II.xlsx\`, aproximadamente 43.5 MB.
+- **Formato y tamaño:** libro de Excel `online_retail_II.xlsx`, aproximadamente 43.5 MB.
 - **Volumen:** 1,067,371 transacciones.
 - **Periodo:** 1 de diciembre de 2009 a 9 de diciembre de 2011.
-- **Campos:** \`InvoiceNo\`, \`StockCode\`, \`Description\`, \`Quantity\`, \`InvoiceDate\`, \`UnitPrice\`, \`CustomerID\` y \`Country\`.
+- **Campos:** `InvoiceNo`, `StockCode`, `Description`, `Quantity`, `InvoiceDate`, `UnitPrice`, `CustomerID` y `Country`.
 - **Licencia:** Creative Commons Attribution 4.0 International (CC BY 4.0), que permite compartir y adaptar los datos con atribución.
 
 La ficha oficial informa que el conjunto corresponde a una tienda británica en línea que vende artículos de regalo. También advierte que contiene valores faltantes. No se importó porque no representa una empresa fabricante o distribuidora de equipo industrial mexicano: no contiene sucursales, transportistas, guías, costos de flete, RFC, régimen fiscal, ni la clasificación OMNIGOLD/HYVOLT/HYPRENE. Sus precios están expresados en libras esterlinas. Adaptarlo requeriría inventar la mayor parte de las relaciones y atributos del proyecto, por lo que no sería una fuente apropiada para poblar este esquema.
@@ -37,7 +37,7 @@ También se revisó el conjunto *Online Retail*, con 541,909 registros y seis ca
 
 ## Datos que se generarán
 
-El script \`poblar/poblar.py\` genera registros ficticios con semilla fija. Las tablas principales tendrán como mínimo 200 filas:
+El script `poblar/poblar.py` genera registros ficticios con semilla fija. Las tablas principales tendrán como mínimo 200 filas:
 
 | Tabla | Registros planeados | Relación principal |
 |---|---:|---|
@@ -49,7 +49,7 @@ El script \`poblar/poblar.py\` genera registros ficticios con semilla fija. Las 
 | detalle | 1,200 | Dos renglones por pedido, asociados a productos. |
 | envio | 300 | Envíos asociados a pedidos, transportistas y sucursales del mismo cliente. |
 
-Los identificadores, nombres, correos del dominio reservado \`.test\`, RFC de demostración y teléfonos serán ficticios. La semilla permite repetir los mismos datos en cada ejecución. La carga utiliza \`COPY\` hacia tablas temporales y después inserta en las tablas definitivas en orden de dependencia.
+Los identificadores, nombres, correos del dominio reservado `.test`, RFC de demostración y teléfonos serán ficticios. La semilla permite repetir los mismos datos en cada ejecución. La carga utiliza `COPY` hacia tablas temporales y después inserta en las tablas definitivas en orden de dependencia.
 
 ## Calidad y limpieza
 
