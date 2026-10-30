@@ -30,6 +30,10 @@ docker compose cp .\practica4\migraciones\001-dominios.sql db:/tmp/001-dominios.
 docker compose exec -T db psql -U postgres -d ventas_industriales -v ON_ERROR_STOP=1 -f /tmp/001-dominios.sql
 ```
 
+### Crear roles y usuarios
+
+Sigue las instrucciones de `practica4/permisos.md`. Las contraseñas se definen como variables de entorno y se pasan a `psql`; no se guardan en el repositorio.
+
 ### Instalar y ejecutar la carga
 
 ```powershell
@@ -38,7 +42,10 @@ py -m venv .venv
 pip install -r .\practica4\poblar\requirements.txt
 $env:DATABASE_URL = "postgresql://usuario_app:TU_CLAVE@localhost:5434/ventas_industriales"
 py .\practica4\poblar\poblar.py
+py .\practica4\poblar\comparar-copy-insert.py
 ```
+
+El segundo comando compara el tiempo de INSERT individual y COPY sobre 3,000 filas temporales; registra los tiempos reales de tu equipo.
 
 El usuario `usuario_app` se crea mediante el script de permisos. No se guardan contraseñas en los archivos del repositorio. La carga usa `COPY` hacia tablas temporales, inserta en orden de dependencia y confirma todo al final. Si una fila falla, la transacción completa se revierte. Al ejecutarla otra vez, las restricciones UNIQUE/PK y `ON CONFLICT DO NOTHING` evitan duplicados; el reporte muestra filas insertadas y ya existentes.
 
@@ -47,8 +54,10 @@ El usuario `usuario_app` se crea mediante el script de permisos. No se guardan c
 - `schema.sql`: esquema relacional base recopilado de la Práctica 3.
 - `practica4/dominios.md`: tipos de dato y reglas del dominio.
 - `practica4/fuente.md`: búsqueda de datos públicos y justificación de datos sintéticos.
+- `practica4/proyecto-asignado/`: fuente, cifras y procedimiento de carga del proyecto asignado.
 - `practica4/migraciones/001-dominios.sql`: restricciones adicionales.
 - `practica4/poblar/poblar.py`: carga repetible con COPY.
+- `practica4/poblar/comparar-copy-insert.py`: comparación de tiempo INSERT/COPY.
 - `practica4/pruebas-dominio.md` y `practica4/pruebas-dominio.sql`: pruebas de restricciones.
 - `practica4/permisos.md` y `practica4/permisos.sql`: roles y privilegios.
 - `practica5/`: claves foráneas, acciones referenciales, DML y transacciones.
