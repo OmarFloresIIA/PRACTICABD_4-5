@@ -1,5 +1,5 @@
 -- Migración 001: dominios y restricciones del proyecto propio.
--- Motor: PostgreSQL 17. Ejecutar después de schema.sql, como administrador.
+-- Motor: PostgreSQL 17. Ejecutar después de esquema.sql, como administrador.
 BEGIN;
 
 -- EXPORTACION tiene 11 caracteres; el VARCHAR(10) del esquema anterior era insuficiente.
