@@ -29,7 +29,7 @@ INSERT INTO pedido (folio,numerocliente,estatus,dia,mes,anio)
 VALUES (99300001,99300001,'REGISTRADO',1,2,2026);
 
 INSERT INTO detalle (folio,claveparcial,claveproducto,costoproduccion,precioaplicado,cantidad)
-SELECT 99300001,1,claveproducto,costounitario_usd,preciounitario_usd,1
+SELECT 99300001,1,claveproducto,costounitariousd,preciounitariousd,1
 FROM producto ORDER BY claveproducto LIMIT 1;
 
 SELECT COUNT(*) AS detalles_antes
