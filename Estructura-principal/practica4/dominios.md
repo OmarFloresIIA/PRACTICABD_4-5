@@ -60,7 +60,7 @@ Los identificadores que pueden contener letras se guardan como texto. Los import
 
 ## Dominios repetidos
 
-Se definen dos dominios compartidos con `CREATE DOMAIN`: `correo_electronico` (VARCHAR(100) con una comprobación de formato) y `telefono_contacto` (VARCHAR(20) con una comprobación de formato). Se usan en cliente, transportista y sucursal. La ventaja es que la misma regla se declara una sola vez y se aplica de forma uniforme en varias tablas. RFC y código postal conservan CHECK propios porque sus reglas son diferentes.
+Se definen dos dominios compartidos con `CREATE DOMAIN`: `correo_electronico` (VARCHAR(100) con una comprobación de formato) y `telefono_contacto` (VARCHAR(20) con una comprobación de formato). Se usan en cliente, transportista y sucursal. La ventaja es que la misma regla se declara una sola vez y se aplica de forma uniforme en varias tablas. RFC y código postal conservan CHECK propios porque sus reglas son diferentes. El esquema utiliza `BOOLEAN`, `INTEGER`, `SMALLINT`, `NUMERIC` y `VARCHAR`; las fechas se guardan en componentes de día, mes y año, y se valida que formen una fecha real mediante `make_date`.
 
 ## Restricciones de dominio declaradas
 
