@@ -9,34 +9,34 @@ El proyecto asignado es el almacén dimensional de Obra Pública Municipal. Para
 | warehouse.fact_eventos_auditoria | Un evento de auditoría ocurrido en una fecha, con un tipo de evento y referencias opcionales a obra, región, personal, constructora, fuente, presupuesto, poblador o propuesta. | (tiempo_key, evento_key) |
 | warehouse.fact_obra_mensual | El resumen de una obra para un mes específico: presupuesto, costo acumulado, saldo, avance, retraso y conteos de informes, evidencias y permisos. | (tiempo_key, obra_key) |
 
-La granularidad de \`fact_eventos_auditoria\` es un evento individual. La granularidad de \`fact_obra_mensual\` es una combinación obra-mes: una obra puede tener una fila por cada mes de seguimiento, pero no dos filas para la misma obra y fecha.
+La granularidad de `fact_eventos_auditoria` es un evento individual. La granularidad de `fact_obra_mensual` es una combinación obra-mes: una obra puede tener una fila por cada mes de seguimiento, pero no dos filas para la misma obra y fecha.
 
 Las diez dimensiones declaradas en el esquema son:
 
-- \`dim_tiempo\`
-- \`dim_tipo_evento\`
-- \`dim_obra\`
-- \`dim_region\`
-- \`dim_constructora\`
-- \`dim_personal\`
-- \`dim_fuente\`
-- \`dim_presupuesto\`
-- \`dim_poblador\`
-- \`dim_propuesta\`
+- `dim_tiempo`
+- `dim_tipo_evento`
+- `dim_obra`
+- `dim_region`
+- `dim_constructora`
+- `dim_personal`
+- `dim_fuente`
+- `dim_presupuesto`
+- `dim_poblador`
+- `dim_propuesta`
 
 ## Claves foráneas declaradas
 
-El archivo \`db/arquitectura/ESQUEMA DEL DATA WAREHOUSE.sql\` declara las claves foráneas de ambas tablas de hechos.
+El archivo `db/arquitectura/ESQUEMA DEL DATA WAREHOUSE.sql` declara las claves foráneas de ambas tablas de hechos.
 
-- \`fact_eventos_auditoria.tiempo_key\` y \`tipo_evento_key\` son NOT NULL y apuntan a \`dim_tiempo\` y \`dim_tipo_evento\).
+- `fact_eventos_auditoria.tiempo_key` y `tipo_evento_key` son NOT NULL y apuntan a `dim_tiempo` y `dim_tipo_evento\).
 - Sus referencias a obra, región, personal, constructora, fuente, presupuesto, poblador y propuesta son opcionales; por eso admiten NULL.
-- \`fact_obra_mensual.tiempo_key\` y \`obra_key\` son NOT NULL y apuntan a \`dim_tiempo\` y \`dim_obra\`.
+- `fact_obra_mensual.tiempo_key` y `obra_key` son NOT NULL y apuntan a `dim_tiempo` y `dim_obra`.
 
 No se encontró una FK faltante entre las tablas de hechos y las dimensiones enumeradas. El SQL de comprobación revisa de todos modos las referencias huérfanas con LEFT JOIN; cada conteo debe ser cero.
 
 ## Consultas de comprobación
 
-El archivo \`sql/comprobar-integridad-almacen.sql\` incluye:
+El archivo `sql/comprobar-integridad-almacen.sql` incluye:
 
 1. Conteo de hechos sin dimensión de tiempo o tipo de evento.
 2. Conteo de referencias no nulas a dimensiones inexistentes.
@@ -57,6 +57,6 @@ Las consultas previas a la migración permiten revisar si los datos actuales cum
 
 ## Datos y comparación con el artículo
 
-El artículo reporta un escenario de datos sintéticos: 1,247 obras, 55 comunidades, presupuesto acumulado de $127.4 millones MXN, 8,934 eventos de auditoría, 3,421 evidencias, 2,341 pobladores, 2,156 propuestas y 8,723 votos. El generador del repositorio declara esos mismos valores y contiene una opción \`--verificar\` que comprueba la población prevista sin conectarse a PostgreSQL.
+El artículo reporta un escenario de datos sintéticos: 1,247 obras, 55 comunidades, presupuesto acumulado de $127.4 millones MXN, 8,934 eventos de auditoría, 3,421 evidencias, 2,341 pobladores, 2,156 propuestas y 8,723 votos. El generador del repositorio declara esos mismos valores y contiene una opción `--verificar` que comprueba la población prevista sin conectarse a PostgreSQL.
 
 Los conteos reales de las tablas deben obtenerse después de ejecutar el generador. No se presentan como ejecutados en este documento porque requieren levantar el contenedor local.
