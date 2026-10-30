@@ -8,7 +8,7 @@ En el esquema original la acción es `ON DELETE CASCADE`. Se propone cambiarla a
 
 ## Cambio SQL
 
-Archivo: `cambio-omar.sql`.
+Archivo: `002-referencias-omar.sql`.
 
 ```sql
 ALTER TABLE detalle DROP CONSTRAINT fk_detalle_pedido;
