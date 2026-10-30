@@ -50,6 +50,10 @@ La correspondencia muestra que algunos campos tienen nombres o significados cerc
 
 También se revisó el conjunto *Online Retail*, con 541,909 registros y seis campos de negocio equivalentes, pero presenta el mismo problema de dominio: comercio minorista británico de regalos, no ventas industriales con transporte y sucursales. Se descartó por la misma razón.
 
+### Calidad observada en el candidato descartado
+
+La ficha oficial de Online Retail II indica que existen valores faltantes y que el prefijo `C` en `InvoiceNo` identifica cancelaciones. Como no se descargó ni se incorporó el archivo, no se modificó ninguna fila ni se afirma haber contado cuántos registros tienen cada problema. Si se hubiera elegido ese conjunto, antes de cargarlo habría que revisar los identificadores de cliente faltantes, separar las cancelaciones, revisar cantidades negativas y validar que fechas y precios pudieran convertirse al dominio de destino. No se aplicó esa limpieza porque el conjunto se descartó por no representar el caso industrial.
+
 ## Datos que se generarán
 
 El script `poblar/poblar.py` genera registros ficticios con semilla fija. Las tablas principales tendrán como mínimo 200 filas:
