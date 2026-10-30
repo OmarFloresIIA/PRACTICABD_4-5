@@ -62,7 +62,8 @@ El usuario `usuario_app` se crea mediante el script de permisos. No se guardan c
 - `practica4/permisos.md` y `practica4/permisos.sql`: roles y privilegios.
 - `practica5/`: claves foráneas, acciones referenciales, DML y transacciones.
 - `practica5/pruebas-referenciales.md`: pruebas de CASCADE, RESTRICT, actualización y orden de carga.
-- `practica5/integrantes/`: cambios individuales; la propuesta de Brenda está pendiente de confirmación.
+- `practica5/integrantes/`: migraciones y pruebas individuales; la propuesta de Brenda está pendiente de confirmación.
+- `practica5/sql/002-restricciones-almacen.sql`: tres restricciones de dominio para probar en una copia del almacén asignado.
 - `evidencias/`: capturas auténticas de ejecución, pendientes de obtener en el equipo local.
 
 ## Proyecto asignado
