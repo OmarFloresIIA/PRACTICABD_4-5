@@ -79,13 +79,11 @@ Se definen dos dominios compartidos con `CREATE DOMAIN`: `correo_electronico` (V
 | CHECK | transportista.RFC | RFC obligatorio para modalidad nacional y nulo si no aplica. |
 | CHECK | transportista.codigoAduanal / agenciaAduanal | Ambos datos son obligatorios para modalidad internacional. |
 | UNIQUE | transportista.email | Un correo no identifica a dos transportistas. |
-
 | CHECK | producto.tipoProducto | Solo se admiten las tres líneas comerciales del proyecto. |
 | CHECK | producto (proveedores) | Cada producto tiene únicamente el proveedor que corresponde a su línea. |
 | CHECK | producto.costoUnitarioUSD / precioUnitarioUSD | Los importes no pueden ser negativos. |
 | CHECK | producto.precioUnitarioUSD | El precio de lista no debe ser menor que el costo unitario. |
 | CHECK | sucursal.CP | Si se captura, debe contener cinco dígitos. |
-
 | CHECK | pedido.dia / mes / anio | La fecha debe existir en el calendario. |
 | DEFAULT | pedido.estatus | Un pedido nuevo inicia como REGISTRADO. |
 | DEFAULT | pedido.activo | Un pedido nuevo está activo. |
