@@ -47,8 +47,15 @@ COMMIT;
 DO $$
 DECLARE v_tiempo integer; v_obra bigint;
 BEGIN
-  SELECT tiempo_key INTO v_tiempo FROM warehouse.dim_tiempo ORDER BY tiempo_key LIMIT 1;
-  SELECT obra_key INTO v_obra FROM warehouse.dim_obra ORDER BY obra_key LIMIT 1;
+  SELECT d.tiempo_key INTO v_tiempo
+  FROM warehouse.dim_tiempo d
+  WHERE d.anio=2024 AND d.dia=2
+    AND NOT EXISTS (
+      SELECT 1 FROM warehouse.fact_obra_mensual f
+      WHERE f.tiempo_key=d.tiempo_key AND f.obra_key=(SELECT MIN(obra_key) FROM warehouse.dim_obra)
+    )
+  ORDER BY d.tiempo_key LIMIT 1;
+  SELECT MIN(obra_key) INTO v_obra FROM warehouse.dim_obra;
 
   BEGIN
     INSERT INTO warehouse.fact_obra_mensual
