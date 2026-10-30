@@ -188,12 +188,14 @@ def main():
         return 2
 
     conexion = None
+    tabla_actual = None
     try:
         conexion = psycopg2.connect(dsn)
         conexion.autocommit = False
         resultados = []
         with conexion.cursor() as cur:
             for tabla, columnas, filas in generar_datos():
+                tabla_actual = tabla
                 total, insertadas = cargar_con_copy(cur, tabla, columnas, filas)
                 resultados.append((tabla, total, insertadas, total - insertadas, 0))
         conexion.commit()
@@ -209,7 +211,14 @@ def main():
         if conexion is not None:
             conexion.rollback()
         print("ERROR: la carga completa fue revertida.", file=sys.stderr)
+        print(f"Tabla en proceso: {tabla_actual or 'no identificada'}", file=sys.stderr)
         print(f"Detalle del gestor: {exc}", file=sys.stderr)
+        if isinstance(exc, psycopg2.Error) and exc.diag is not None:
+            if exc.diag.constraint_name:
+                print(f"Restricción: {exc.diag.constraint_name}", file=sys.stderr)
+            if exc.diag.message_detail:
+                print(f"Detalle del renglón: {exc.diag.message_detail}", file=sys.stderr)
+        print("No se confirmó ninguna tabla: la transacción completa quedó revertida.", file=sys.stderr)
         return 1
     finally:
         if conexion is not None:
