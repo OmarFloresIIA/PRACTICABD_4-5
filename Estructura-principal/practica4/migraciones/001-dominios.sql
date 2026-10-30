@@ -41,7 +41,7 @@ ALTER TABLE sucursal
 
 ALTER TABLE producto
   ADD CONSTRAINT ck_producto_precio_cubre_costo
-  CHECK (preciounitario_usd >= costounitario_usd);
+  CHECK (preciounitariousd >= costounitariousd);
 
 ALTER TABLE pedido
   ALTER COLUMN estatus SET DEFAULT 'REGISTRADO';
