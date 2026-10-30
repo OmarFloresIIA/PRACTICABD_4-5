@@ -2,7 +2,7 @@
 
 ## Alcance
 
-El proyecto propio representa las ventas y envíos de una empresa que comercializa tres líneas de productos industriales: OMNIGOLD, HYVOLT y HYPRENE. El esquema relacional de referencia está en `schema.sql`; las restricciones adicionales se aplican mediante `migraciones/001-dominios.sql`.
+El proyecto propio representa las ventas y envíos de una empresa que comercializa tres líneas de productos industriales: OMNIGOLD, HYVOLT y HYPRENE. El esquema relacional de referencia está en `esquema.sql`; las restricciones adicionales se aplican mediante `migraciones/001-dominios.sql`.
 
 ## Tipos de dato
 
