@@ -51,3 +51,7 @@ python scripts/generate_synthetic_data.py --verificar
 comprueba sin conexión a PostgreSQL las cifras principales previstas por el artículo. La carga completa informa conteos por tabla y compara INSERT individual con COPY en una tabla temporal. Si una etapa falla, la transacción revierte el conjunto completo.
 
 **Advertencia:** `limpiar_datos_sinteticos()` elimina la población sintética anterior de las tablas operacionales y de las dimensiones cambiantes para permitir una nueva carga sin duplicados. Ejecutar únicamente en la base local dedicada a la práctica, nunca en una base con información real.
+
+## Confirmación indicada en el enunciado
+
+El PDF de la práctica pide consultar con el docente si ya existen datos reales para el proyecto de obra pública municipal. El repositorio y el artículo disponibles documentan una población sintética, pero no incluyen una confirmación del docente. Antes de entregar, el equipo debe confirmar si el profesor compartió un conjunto real adicional. Si no existe, se conserva esta justificación y se usa el generador del fork.
