@@ -1,5 +1,5 @@
 -- Cambio individual de Omar: detalle -> pedido pasa de CASCADE a RESTRICT.
--- Ejecutar sobre una COPIA después de schema.sql y 001-dominios.sql.
+-- Ejecutar sobre una COPIA después de esquema.sql y 001-dominios.sql.
 BEGIN;
 ALTER TABLE detalle DROP CONSTRAINT fk_detalle_pedido;
 ALTER TABLE detalle
