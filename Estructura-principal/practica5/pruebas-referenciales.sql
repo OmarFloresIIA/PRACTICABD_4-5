@@ -2,6 +2,8 @@
 -- Ejecutar después de la carga de datos y de aplicar las migraciones.
 BEGIN;
 
+CREATE TEMP TABLE _inicializar_pg_temp (id integer) ON COMMIT DROP;
+
 CREATE OR REPLACE FUNCTION pg_temp.esperar_error(
     p_nombre text, p_sql text, p_sqlstate text
 ) RETURNS void LANGUAGE plpgsql AS $$
