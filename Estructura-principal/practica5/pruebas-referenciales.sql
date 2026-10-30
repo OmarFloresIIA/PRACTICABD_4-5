@@ -71,6 +71,10 @@ INSERT INTO sucursal (numerocliente,clavesucursal,nombreplanta)
 VALUES (99100003,'UPD01','Sucursal para UPDATE CASCADE');
 INSERT INTO pedido (folio,numerocliente,estatus,dia,mes,anio)
 VALUES (99100003,99100003,'REGISTRADO',3,1,2026);
+SELECT 'Antes de UPDATE CASCADE' AS momento,
+       (SELECT COUNT(*) FROM cliente WHERE numerocliente=99100003) AS clientes,
+       (SELECT COUNT(*) FROM sucursal WHERE numerocliente=99100003) AS sucursales,
+       (SELECT COUNT(*) FROM pedido WHERE numerocliente=99100003) AS pedidos;
 UPDATE cliente SET numerocliente=99100004 WHERE numerocliente=99100003;
 SELECT 'Después de UPDATE CASCADE' AS momento,
        (SELECT COUNT(*) FROM sucursal WHERE numerocliente=99100004) AS sucursales_con_nueva_clave,
