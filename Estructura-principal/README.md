@@ -1,28 +1,73 @@
-# Práctica 4 Base de Datos 
-## Colaboradores
-* **Nombre:** Brenda Roa Venegas 
-* **Boleta:** 2025630789
+# Prácticas 4 y 5 — Proyecto propio y proyecto asignado
 
-* **Nombre:** Omar Flores Olivares
-* **Boleta:** 2025630831
+## Integrantes
+- Brenda Roa Venegas
+- Omar Flores Olivares
 
+Grupo: 3BV1. Gestor del proyecto propio: PostgreSQL 17.
 
-* **Grupo:** 3BV1
-* **Carrera:** Ingenieria en Inteligencia Artificial 
+## Proyecto propio
+El proyecto representa las ventas y los envíos de tres líneas de productos industriales: OMNIGOLD, HYVOLT y HYPRENE. **Todos los registros generados para esta práctica son sintéticos; no son ventas reales ni datos personales reales.**
 
-## Proyecto Asignado
-### **Obra pública municipal.**
-Almacén dimensional para el monitoreo geoespacial de obra pública.
-#### URL del fork: https://github.com/OmarFloresIIA/PublicMunicipalWorks_DWH
-#### Gestor utilizado: PostgresSQL 17
----
-## Issues ejecutados
-+ **Roa Venegas Brenda**
-    + [Guardar la ubicación real de las obras y comprobar que las fotos se tomaron ahí](https://github.com/oatbrend/PRACTICA2-DB/issues/16)
+### Preparación del entorno (Windows / PowerShell)
 
-+ **Flores Olivares Omar**
-    + [Agrupar por tema las propuestas de la gente y avisar cuando se repiten](https://github.com/oatbrend/PRACTICA2-DB/issues/11)
-    
+1. Entra a esta carpeta (`Estructura-principal`).
+2. Copia `.env.example` como `.env` y cambia la contraseña local.
+3. Inicia PostgreSQL:
 
-## Uso de Inteligencia Artificial
-+ Se utilizó la función mostrada por el profesor de enlazar un repositorio de Git Hub con Chat GPT, se enlazó el fork creado con Chat GPT para realizar el ejercicio 7 y 8.
+```powershell
+Copy-Item .env.example .env
+# Edita .env y cambia POSTGRES_PASSWORD
+docker compose up -d
+```
+
+El esquema base se crea al inicializar el volumen por primera vez. Si ya existía un volumen anterior y necesitas recrearlo, ten presente que `docker compose down -v` elimina los datos locales de ese volumen.
+
+### Aplicar dominios y restricciones
+
+```powershell
+docker compose cp .\practica4\migraciones\001-dominios.sql db:/tmp/001-dominios.sql
+docker compose exec -T db psql -U postgres -d ventas_industriales -v ON_ERROR_STOP=1 -f /tmp/001-dominios.sql
+```
+
+### Crear roles y usuarios
+
+Sigue las instrucciones de `practica4/permisos.md`. Las contraseñas se definen como variables de entorno y se pasan a `psql`; no se guardan en el repositorio.
+
+### Instalar y ejecutar la carga
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r .\practica4\poblar\requirements.txt
+$env:DATABASE_URL = "postgresql://usuario_app:TU_CLAVE@localhost:5434/ventas_industriales"
+py .\practica4\poblar\poblar.py
+py .\practica4\poblar\comparar-copy-insert.py
+```
+
+El segundo comando compara el tiempo de INSERT individual y COPY sobre 3,000 filas temporales; registra los tiempos reales de tu equipo.
+
+El usuario `usuario_app` se crea mediante el script de permisos. No se guardan contraseñas en los archivos del repositorio. La carga usa `COPY` hacia tablas temporales, inserta en orden de dependencia y confirma todo al final. Si una fila falla, la transacción completa se revierte. Al ejecutarla otra vez, las restricciones UNIQUE/PK y `ON CONFLICT DO NOTHING` evitan duplicados; el reporte muestra filas insertadas y ya existentes.
+
+## Archivos de la práctica
+
+- `esquema.sql`: esquema relacional base recopilado de la Práctica 3.
+- `practica4/dominios.md`: tipos de dato y reglas del dominio.
+- `practica4/fuente.md`: búsqueda de datos públicos y justificación de datos sintéticos.
+- `practica4/proyecto-asignado/`: fuente, cifras y procedimiento de carga del proyecto asignado.
+- `practica4/migraciones/001-dominios.sql`: restricciones adicionales.
+- `practica4/poblar/poblar.py`: carga repetible con COPY.
+- `practica4/poblar/comparar-copy-insert.py`: comparación de tiempo INSERT/COPY.
+- `practica4/pruebas-dominio.md` y `practica4/pruebas-dominio.sql`: pruebas de restricciones.
+- `practica4/permisos.md` y `practica4/permisos.sql`: roles y privilegios.
+- `practica5/`: claves foráneas, acciones referenciales, DML y transacciones.
+- `practica5/pruebas-referenciales.md`: pruebas de CASCADE, RESTRICT, actualización y orden de carga.
+- `practica5/integrantes/`: migraciones y pruebas individuales; la propuesta de Brenda está pendiente de confirmación.
+- `practica5/sql/002-restricciones-almacen.sql`: tres restricciones de dominio para probar en una copia del almacén asignado.
+- `evidencias/`: capturas auténticas de ejecución, pendientes de obtener en el equipo local.
+
+## Proyecto asignado
+El proyecto asignado es Obra Pública Municipal. La carga debe respetar el esquema del fork y los datos sintéticos declarados en el artículo. La documentación correspondiente está en `practica4/proyecto-asignado/` y `practica5/integridad-almacen.md`.
+
+## Evidencia
+Los archivos SQL y Python quedan preparados para ejecutarse, pero la salida real de PostgreSQL, las capturas y la revisión del Pull Request deben obtenerse en el entorno del equipo. No se registran como ejecutados pasos que todavía no se han comprobado.
