@@ -23,10 +23,10 @@ ON CONFLICT (numerocliente, clavesucursal) DO NOTHING;
 -- 2. UPDATE que depende de otra tabla: actualiza el precio aplicado usando
 -- el precio de lista del producto relacionado.
 UPDATE detalle d
-SET precioaplicado = p.preciounitario_usd
+SET precioaplicado = p.preciounitariousd
 FROM producto p
 WHERE p.claveproducto = d.claveproducto
-  AND d.precioaplicado <> p.preciounitario_usd;
+  AND d.precioaplicado <> p.preciounitariousd;
 
 -- UPDATE con CASE: clasifica pedidos que ya tienen envío.
 UPDATE pedido p
@@ -59,7 +59,7 @@ ORDER BY c.numerocliente
 LIMIT 1;
 
 INSERT INTO detalle (folio, claveparcial, claveproducto, costoproduccion, precioaplicado, cantidad)
-SELECT 99200001, 1, claveproducto, costounitario_usd, preciounitario_usd, 2
+SELECT 99200001, 1, claveproducto, costounitariousd, preciounitariousd, 2
 FROM producto
 ORDER BY claveproducto
 LIMIT 1;
