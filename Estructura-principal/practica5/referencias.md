@@ -15,11 +15,11 @@ El esquema relacional de la Práctica 3 declara siete claves foráneas. Todas so
 ## Correspondencia con el modelo
 
 - Las relaciones uno a muchos se implementan propagando la clave primaria del lado uno como clave foránea del lado muchos.
-- \`detalle\` usa la clave compuesta \`(folio, claveparcial)\`, por lo que el pedido participa en su identificación.
-- \`envio\` contiene la clave compuesta de \`sucursal\` para asegurar que el destino existe.
-- La FK de \`envio.folio\` es UNIQUE: el modelo permite como máximo un envío por pedido.
+- `detalle` usa la clave compuesta `(folio, claveparcial)`, por lo que el pedido participa en su identificación.
+- `envio` contiene la clave compuesta de `sucursal` para asegurar que el destino existe.
+- La FK de `envio.folio` es UNIQUE: el modelo permite como máximo un envío por pedido.
 - Las claves foráneas admiten nulos solo cuando la participación mínima del hijo es cero. En este modelo todas las relaciones listadas son obligatorias desde el lado hijo; por eso no admiten NULL.
 
 ## Acciones referenciales elegidas
 
-Se usan CASCADE cuando el hijo depende del padre para existir (\`sucursal\` y \`detalle\`). Se usa RESTRICT para conservar el historial comercial cuando eliminar al padre podría borrar información útil (\`pedido\`, \`producto\`, \`transportista\` y \`sucursal\` referenciada por un envío). ON UPDATE CASCADE mantiene las referencias si cambia una clave primaria.
+Se usan CASCADE cuando el hijo depende del padre para existir (`sucursal` y `detalle`). Se usa RESTRICT para conservar el historial comercial cuando eliminar al padre podría borrar información útil (`pedido`, `producto`, `transportista` y `sucursal` referenciada por un envío). ON UPDATE CASCADE mantiene las referencias si cambia una clave primaria.
