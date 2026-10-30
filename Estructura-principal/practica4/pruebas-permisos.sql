@@ -45,7 +45,12 @@ CREATE TABLE public.prueba_admin_temporal (id integer PRIMARY KEY);
 DROP TABLE public.prueba_admin_temporal;
 ROLLBACK;
 
-\echo '6. REVOKE: retirar INSERT temporalmente y comprobar el rechazo'
+\echo '6. Administración: crear usuarios/roles está negado (no tiene CREATEROLE)'
+SET ROLE usuario_admin;
+CREATE ROLE rol_prueba_no_autorizado;
+RESET ROLE;
+
+\echo '7. REVOKE: retirar INSERT temporalmente y comprobar el rechazo'
 REVOKE INSERT ON public.cliente FROM rol_aplicacion;
 BEGIN;
 SET LOCAL ROLE usuario_app;
@@ -58,6 +63,6 @@ VALUES
   'General de Ley Personas Morales', 'Estado de México');
 ROLLBACK;
 
-\echo '7. Restaurar INSERT para que el usuario de aplicación pueda seguir cargando'
+\echo '8. Restaurar INSERT para que el usuario de aplicación pueda seguir cargando'
 GRANT INSERT ON public.cliente TO rol_aplicacion;
 \set ON_ERROR_STOP on
