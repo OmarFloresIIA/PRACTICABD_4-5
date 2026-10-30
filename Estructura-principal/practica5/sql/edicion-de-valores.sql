@@ -39,7 +39,7 @@ END;
 -- 3. Borrado lógico: conserva el pedido y sus detalles, pero lo marca inactivo.
 UPDATE pedido
 SET activo = FALSE
-WHERE folio = (SELECT MIN(folio) FROM pedido WHERE activo = TRUE);
+WHERE folio = 20000001 AND activo = TRUE;
 
 -- DELETE con subconsulta: elimina pedidos cancelados que no tienen envío.
 -- La FK pedido -> cliente es RESTRICT; detalle -> pedido es CASCADE.
@@ -51,6 +51,8 @@ WHERE p.estatus = 'CANCELADO'
 -- 4. Transacción que modifica dos tablas; el punto de recuperación revierte
 -- únicamente el envío de demostración, pero conserva pedido y detalle.
 BEGIN;
+DELETE FROM envio WHERE folio = 99200001;
+DELETE FROM pedido WHERE folio = 99200001;
 INSERT INTO pedido (folio, numerocliente, estatus, dia, mes, anio)
 SELECT 99200001, c.numerocliente, 'REGISTRADO', 10, 1, 2026
 FROM cliente c
