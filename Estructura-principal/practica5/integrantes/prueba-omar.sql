@@ -1,6 +1,8 @@
 -- Prueba del cambio individual de Omar.
 BEGIN;
 
+CREATE TEMP TABLE _inicializar_pg_temp (id integer) ON COMMIT DROP;
+
 CREATE OR REPLACE FUNCTION pg_temp.esperar_error_fk(p_sql text)
 RETURNS void LANGUAGE plpgsql AS $$
 DECLARE v_estado text; v_mensaje text;
