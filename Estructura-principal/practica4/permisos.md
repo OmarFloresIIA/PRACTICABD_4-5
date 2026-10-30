@@ -22,8 +22,9 @@ Las contraseñas se reciben como variables de psql desde el entorno local. No se
 | detalle | SELECT, INSERT, UPDATE, DELETE | SELECT | ALL |
 | envio | SELECT, INSERT, UPDATE, DELETE | SELECT | ALL |
 | Esquema public | USAGE | USAGE | USAGE, CREATE |
+| Crear roles/usuarios | No | No | No (sin CREATEROLE) |
 
-La administración recibe la propiedad de las tablas del proyecto. La aplicación y consulta no reciben permiso para crear tablas ni modificar la estructura.
+La administración recibe la propiedad de las tablas del proyecto y puede crear objetos en el esquema. No es superusuario ni recibe CREATEROLE: puede administrar las tablas, pero no crear cuentas o roles nuevos. La aplicación y consulta no reciben permiso para crear tablas ni modificar la estructura.
 
 ## Crear los usuarios
 
