@@ -25,10 +25,10 @@ ALTER TABLE detalle
 
 Archivo: `prueba-omar.sql`. Inserta un cliente, pedido y detalle temporales; comprueba que eliminar el pedido falla mientras exista el detalle; después elimina primero el detalle y luego el pedido. Todo termina en ROLLBACK para no dejar registros de prueba.
 
-## Impacto
+## Impacto y decisión para el dominio
 
-- **Ventaja:** evita borrar por accidente el detalle que explica qué productos y cantidades se vendieron.
-- **Desventaja:** obliga a borrar los detalles manualmente antes de borrar un pedido.
-- **Comparación con el original:** CASCADE facilita borrar una entidad débil junto con su padre; RESTRICT conserva la información hasta que el usuario decida eliminarla de manera explícita.
+- **Con RESTRICT:** el pedido permanece y sus detalles también; PostgreSQL impide eliminar el pedido mientras tenga renglones.
+- **Con CASCADE:** al eliminar el pedido, sus detalles se eliminan automáticamente.
+- **Conclusión:** para este modelo, CASCADE es la acción más adecuada porque DETALLE depende del PEDIDO para identificarse y no tiene sentido sin él. Si se necesita conservar el historial, el borrado lógico del pedido (`activo = FALSE`) es preferible a conservar detalles huérfanos. RESTRICT se prueba como alternativa para observar su efecto, pero no se recomienda como regla definitiva.
 
 Aplicar únicamente en una copia de la base. La captura debe mostrar el error de FK y la eliminación en el orden correcto.
