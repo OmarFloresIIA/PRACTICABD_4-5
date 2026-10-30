@@ -1,8 +1,7 @@
 -- Aplicar únicamente en una COPIA de la base del proyecto asignado.
 -- Ejecutar después de cargar el esquema y los datos sintéticos.
-BEGIN;
 
--- Antes de agregar las restricciones, comprobar si los datos existentes las cumplen.
+-- 1. Revisar si los datos existentes cumplen las reglas propuestas.
 SELECT COUNT(*) AS montos_negativos
 FROM warehouse.fact_obra_mensual
 WHERE presupuesto_total < 0 OR costo_acumulado < 0 OR saldo_presupuesto < 0;
@@ -16,6 +15,9 @@ SELECT COUNT(*) AS avances_evento_fuera_de_rango
 FROM warehouse.fact_eventos_auditoria
 WHERE (porcentaje_avance_fisico IS NOT NULL AND porcentaje_avance_fisico NOT BETWEEN 0 AND 100)
    OR (porcentaje_avance_presup IS NOT NULL AND porcentaje_avance_presup NOT BETWEEN 0 AND 100);
+
+-- 2. Aplicar las tres restricciones a la copia y conservarlas.
+BEGIN;
 
 ALTER TABLE warehouse.fact_obra_mensual
   ADD CONSTRAINT ck_fact_obra_mensual_montos_no_negativos
@@ -39,20 +41,42 @@ ALTER TABLE warehouse.fact_eventos_auditoria
     AND (porcentaje_avance_presup IS NULL OR porcentaje_avance_presup BETWEEN 0 AND 100)
   );
 
--- Prueba negativa: el CHECK debe rechazar un porcentaje de 101.
+COMMIT;
+
+-- 3. Pruebas negativas: cada inserción debe ser rechazada por CHECK.
 DO $$
 DECLARE v_tiempo integer; v_obra bigint;
 BEGIN
   SELECT tiempo_key INTO v_tiempo FROM warehouse.dim_tiempo ORDER BY tiempo_key LIMIT 1;
   SELECT obra_key INTO v_obra FROM warehouse.dim_obra ORDER BY obra_key LIMIT 1;
+
+  BEGIN
+    INSERT INTO warehouse.fact_obra_mensual
+      (tiempo_key, obra_key, presupuesto_total)
+    VALUES (v_tiempo, v_obra, -1);
+    RAISE EXCEPTION 'No se rechazó el presupuesto negativo.';
+  EXCEPTION WHEN check_violation THEN
+    RAISE NOTICE 'OK: montos negativos rechazados: %', SQLERRM;
+  END;
+
   BEGIN
     INSERT INTO warehouse.fact_obra_mensual
       (tiempo_key, obra_key, avance_fisico_acumulado)
     VALUES (v_tiempo, v_obra, 101);
-    RAISE EXCEPTION 'La restricción no rechazó el porcentaje 101.';
+    RAISE EXCEPTION 'No se rechazó el avance mensual de 101.';
   EXCEPTION WHEN check_violation THEN
-    RAISE NOTICE 'OK: PostgreSQL rechazó el porcentaje 101: %', SQLERRM;
+    RAISE NOTICE 'OK: avance mensual fuera de rango rechazado: %', SQLERRM;
+  END;
+
+  BEGIN
+    INSERT INTO warehouse.fact_eventos_auditoria
+      (tiempo_key, tipo_evento_key, porcentaje_avance_fisico)
+    SELECT v_tiempo, tipo_evento_key, 101
+    FROM warehouse.dim_tipo_evento
+    ORDER BY tipo_evento_key
+    LIMIT 1;
+    RAISE EXCEPTION 'No se rechazó el avance del evento de 101.';
+  EXCEPTION WHEN check_violation THEN
+    RAISE NOTICE 'OK: avance de evento fuera de rango rechazado: %', SQLERRM;
   END;
 END $$;
-
-ROLLBACK;
