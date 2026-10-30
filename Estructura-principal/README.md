@@ -7,7 +7,7 @@
 Grupo: 3BV1. Gestor del proyecto propio: PostgreSQL 17.
 
 ## Proyecto propio
-El proyecto representa las ventas y los envíos de tres líneas de productos industriales: OMNIGOLD, HYVOLT y HYPRENE.
+El proyecto representa las ventas y los envíos de tres líneas de productos industriales: OMNIGOLD, HYVOLT y HYPRENE. **Todos los registros generados para esta práctica son sintéticos; no son ventas reales ni datos personales reales.**
 
 ### Preparación del entorno (Windows / PowerShell)
 
@@ -61,6 +61,8 @@ El usuario `usuario_app` se crea mediante el script de permisos. No se guardan c
 - `practica4/pruebas-dominio.md` y `practica4/pruebas-dominio.sql`: pruebas de restricciones.
 - `practica4/permisos.md` y `practica4/permisos.sql`: roles y privilegios.
 - `practica5/`: claves foráneas, acciones referenciales, DML y transacciones.
+- `practica5/pruebas-referenciales.md`: pruebas de CASCADE, RESTRICT, actualización y orden de carga.
+- `practica5/integrantes/`: cambios individuales; la propuesta de Brenda está pendiente de confirmación.
 - `evidencias/`: capturas auténticas de ejecución, pendientes de obtener en el equipo local.
 
 ## Proyecto asignado
