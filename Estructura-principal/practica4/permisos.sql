@@ -51,7 +51,8 @@ GRANT SELECT
   TO rol_consulta;
 
 -- Administración: propietario de las tablas del proyecto y permiso de crear
--- objetos en public. Los roles de aplicación y consulta no reciben CREATE.
+-- objetos en public. Se otorga CREATE antes de transferir la propiedad.
+GRANT CREATE ON SCHEMA public TO rol_administracion;
 ALTER TABLE public.cliente OWNER TO rol_administracion;
 ALTER TABLE public.transportista OWNER TO rol_administracion;
 ALTER TABLE public.producto OWNER TO rol_administracion;
@@ -59,7 +60,6 @@ ALTER TABLE public.sucursal OWNER TO rol_administracion;
 ALTER TABLE public.pedido OWNER TO rol_administracion;
 ALTER TABLE public.detalle OWNER TO rol_administracion;
 ALTER TABLE public.envio OWNER TO rol_administracion;
-GRANT CREATE ON SCHEMA public TO rol_administracion;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO rol_administracion;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO rol_administracion;
 
