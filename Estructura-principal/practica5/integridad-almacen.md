@@ -34,6 +34,10 @@ El archivo `db/arquitectura/ESQUEMA DEL DATA WAREHOUSE.sql` declara las claves f
 
 No se encontró una FK faltante entre las tablas de hechos y las dimensiones enumeradas. El SQL de comprobación revisa de todos modos las referencias huérfanas con LEFT JOIN; cada conteo debe ser cero.
 
+## ¿Por qué algunos almacenes no declaran todas las FK?
+
+En almacenes con cargas muy grandes, a veces se omiten temporalmente algunas claves foráneas para que la carga masiva tarde menos o para aceptar primero los registros y validarlos después. El riesgo es que entren claves que no existen en las dimensiones. Entonces aparecen hechos huérfanos: al unirlos con la dimensión faltante, esos registros no se muestran y los conteos pueden ser incorrectos. En este proyecto las FK sí están declaradas, por lo que se conservan y se comprueban con las consultas anteriores.
+
 ## Consultas de comprobación
 
 El archivo `sql/comprobar-integridad-almacen.sql` incluye:
