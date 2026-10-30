@@ -16,3 +16,9 @@ Thumbs.db
 
 # Datos persistentes de Docker
 postgres_data/
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.log
