@@ -51,7 +51,7 @@ El usuario `usuario_app` se crea mediante el script de permisos. No se guardan c
 
 ## Archivos de la práctica
 
-- `schema.sql`: esquema relacional base recopilado de la Práctica 3.
+- `esquema.sql`: esquema relacional base recopilado de la Práctica 3.
 - `practica4/dominios.md`: tipos de dato y reglas del dominio.
 - `practica4/fuente.md`: búsqueda de datos públicos y justificación de datos sintéticos.
 - `practica4/proyecto-asignado/`: fuente, cifras y procedimiento de carga del proyecto asignado.
