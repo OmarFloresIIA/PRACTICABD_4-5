@@ -10,8 +10,8 @@ El proyecto propio representa las ventas y envíos de una empresa que comerciali
 |---|---|---:|---|
 | cliente | numeroCliente | INTEGER | Identificador numérico del cliente. |
 | cliente | razonSocial | VARCHAR(150) | Nombre comercial de longitud variable. |
-| cliente | correoCliente | VARCHAR(100) | Correo de contacto; longitud variable. |
-| cliente | telefonoCliente | VARCHAR(20) | Se almacena como texto para conservar prefijos, + y ceros iniciales. |
+| cliente | correoCliente | correo_electronico (dominio sobre VARCHAR(100)) | Correo de contacto con formato validado por un dominio compartido. |
+| cliente | telefonoCliente | telefono_contacto (dominio sobre VARCHAR(20)) | Texto para conservar prefijos, + y ceros iniciales; formato validado por dominio. |
 | cliente | tipoCliente | VARCHAR(15) | Discriminador NACIONAL o EXPORTACION. Se amplía a 15 porque EXPORTACION tiene 11 caracteres. |
 | cliente | RFC | VARCHAR(13) | Identificador fiscal nacional de longitud conocida. |
 | cliente | regimenFiscal | VARCHAR(100) | Descripción del régimen fiscal. |
@@ -20,8 +20,8 @@ El proyecto propio representa las ventas y envíos de una empresa que comerciali
 | cliente | paisReceptor | VARCHAR(50) | Nombre del país. |
 | transportista | claveTransportista | VARCHAR(10) | Clave alfanumérica del transportista. |
 | transportista | nombreEmpresa | VARCHAR(100) | Razón o nombre comercial. |
-| transportista | telefonoAtencion | VARCHAR(20) | Texto para conservar prefijos y signos. |
-| transportista | email | VARCHAR(100) | Correo electrónico opcional. |
+| transportista | telefonoAtencion | telefono_contacto (dominio sobre VARCHAR(20)) | Teléfono opcional con el mismo formato que el de cliente y sucursal. |
+| transportista | email | correo_electronico (dominio sobre VARCHAR(100)) | Correo electrónico opcional con formato validado. |
 | transportista | esNacional / esInternacional | BOOLEAN | Indican las modalidades de operación. |
 | transportista | RFC | VARCHAR(13) | RFC nacional; solo aplica si esNacional es verdadero. |
 | transportista | codigoAduanal | VARCHAR(20) | Código alfanumérico de aduana. |
@@ -34,7 +34,7 @@ El proyecto propio representa las ventas y envíos de una empresa que comerciali
 | sucursal | numeroCliente | INTEGER | Parte de la clave primaria y referencia al cliente. |
 | sucursal | claveSucursal | VARCHAR(10) | Discriminador de sucursal dentro del cliente. |
 | sucursal | nombrePlanta | VARCHAR(100) | Nombre descriptivo de la planta. |
-| sucursal | telefonoEncargado | VARCHAR(20) | Texto para conservar formato telefónico. |
+| sucursal | telefonoEncargado | telefono_contacto (dominio sobre VARCHAR(20)) | Teléfono opcional con formato compartido. |
 | sucursal | calle | VARCHAR(100) | Componente textual de dirección. |
 | sucursal | numero | VARCHAR(10) | Número exterior/interior; puede contener letras. |
 | sucursal | ciudad / estado / pais | VARCHAR(60) | Componentes de dirección de longitud variable. |
@@ -60,7 +60,7 @@ Los identificadores que pueden contener letras se guardan como texto. Los import
 
 ## Dominios repetidos
 
-En este esquema se usan directamente tipos de PostgreSQL conocidos (`BOOLEAN`, `DATE`, `NUMERIC`, `VARCHAR` e `INTEGER`). No se crea un `CREATE DOMAIN` adicional porque las reglas principales cambian según la columna: por ejemplo, un teléfono, un RFC y un código postal tienen formatos diferentes. Las restricciones CHECK permiten expresar esas reglas junto a cada tabla.
+Se definen dos dominios compartidos con `CREATE DOMAIN`: `correo_electronico` (VARCHAR(100) con una comprobación de formato) y `telefono_contacto` (VARCHAR(20) con una comprobación de formato). Se usan en cliente, transportista y sucursal. La ventaja es que la misma regla se declara una sola vez y se aplica de forma uniforme en varias tablas. RFC y código postal conservan CHECK propios porque sus reglas son diferentes.
 
 ## Restricciones de dominio declaradas
 
@@ -71,21 +71,21 @@ En este esquema se usan directamente tipos de PostgreSQL conocidos (`BOOLEAN`, `
 | UNIQUE | cliente.idFiscalGlobal | Dos clientes de exportación no comparten identificador fiscal. |
 | CHECK | cliente.tipoCliente | Solo se admiten NACIONAL y EXPORTACION. |
 | CHECK | cliente (campos fiscales) | Los datos fiscales corresponden únicamente al subtipo indicado. |
-| CHECK | cliente.correocliente | El correo debe tener estructura básica de dirección electrónica. |
+| CHECK de dominio | correo_electronico | El mismo formato de correo se aplica a cliente y transportista. |
 | UNIQUE | cliente.correocliente | Cada correo de contacto identifica un cliente. |
-| CHECK | cliente.telefonocliente | El teléfono admite dígitos, espacios, paréntesis, guiones y prefijo +. |
+| CHECK de dominio | telefono_contacto | El mismo formato telefónico se aplica a cliente, transportista y sucursal. |
 | CHECK | cliente.rfc | Si existe, el RFC debe tener formato nacional. |
 | CHECK | transportista.esNacional / esInternacional | Todo transportista opera al menos en una modalidad. |
 | CHECK | transportista.RFC | RFC obligatorio para modalidad nacional y nulo si no aplica. |
 | CHECK | transportista.codigoAduanal / agenciaAduanal | Ambos datos son obligatorios para modalidad internacional. |
 | UNIQUE | transportista.email | Un correo no identifica a dos transportistas. |
-| CHECK | transportista.email | Si se captura, debe tener formato de correo. |
+
 | CHECK | producto.tipoProducto | Solo se admiten las tres líneas comerciales del proyecto. |
 | CHECK | producto (proveedores) | Cada producto tiene únicamente el proveedor que corresponde a su línea. |
 | CHECK | producto.costoUnitarioUSD / precioUnitarioUSD | Los importes no pueden ser negativos. |
 | CHECK | producto.precioUnitarioUSD | El precio de lista no debe ser menor que el costo unitario. |
 | CHECK | sucursal.CP | Si se captura, debe contener cinco dígitos. |
-| CHECK | sucursal.telefonoEncargado | Si se captura, debe tener formato telefónico permitido. |
+
 | CHECK | pedido.dia / mes / anio | La fecha debe existir en el calendario. |
 | DEFAULT | pedido.estatus | Un pedido nuevo inicia como REGISTRADO. |
 | DEFAULT | pedido.activo | Un pedido nuevo está activo. |
