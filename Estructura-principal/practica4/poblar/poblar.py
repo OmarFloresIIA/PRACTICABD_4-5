@@ -167,7 +167,7 @@ def generar_datos():
         ("transportista", ["clavetransportista", "nombreempresa", "telefonoatencion",
                            "email", "esnacional", "esinternacional", "rfc",
                            "codigoaduanal", "agenciaaduanal"], transportistas),
-        ("producto", ["claveproducto", "costounitario_usd", "preciounitario_usd",
+        ("producto", ["claveproducto", "costounitariousd", "preciounitariousd",
                       "tipoproducto", "provmaquinaria", "provtransformador",
                       "provtransporte"], productos),
         ("sucursal", ["numerocliente", "clavesucursal", "nombreplanta",
