@@ -84,7 +84,7 @@ SELECT pg_temp.esperar_error(
 -- 7. CHECK entre columnas: el precio de lista debe cubrir el costo unitario.
 SELECT pg_temp.esperar_error(
  'CHECK entre costo y precio de producto',
- 'INSERT INTO producto (claveproducto, costounitario_usd, preciounitario_usd, tipoproducto, provmaquinaria)
+ 'INSERT INTO producto (claveproducto, costounitariousd, preciounitariousd, tipoproducto, provmaquinaria)
   VALUES (''PRUEBA990'', 100, 90, ''OMNIGOLD'', ''Proveedor de prueba'')',
  '23514'
 );
