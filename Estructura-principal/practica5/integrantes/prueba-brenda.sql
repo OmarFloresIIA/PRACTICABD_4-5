@@ -24,10 +24,17 @@ INSERT INTO envio
 VALUES
  ('GUIA-BRENDA-01',99400001,'BR-TRANS',99400001,'BR01',500,3,2,2026);
 
+SELECT
+  (SELECT COUNT(*) FROM transportista WHERE clavetransportista='BR-TRANS') AS transportistas_antes,
+  (SELECT COUNT(*) FROM envio WHERE numeroguia='GUIA-BRENDA-01') AS envios_antes;
+
 DELETE FROM transportista WHERE clavetransportista='BR-TRANS';
 
 SELECT numeroguia, folio, clavetransportista
 FROM envio WHERE numeroguia='GUIA-BRENDA-01';
+SELECT
+  (SELECT COUNT(*) FROM transportista WHERE clavetransportista='BR-TRANS') AS transportistas_despues,
+  (SELECT COUNT(*) FROM envio WHERE numeroguia='GUIA-BRENDA-01') AS envios_despues;
 -- Esperado: el envío existe y clavetransportista es NULL.
 
 ROLLBACK;
