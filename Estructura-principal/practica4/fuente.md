@@ -31,6 +31,21 @@ Chen, D. (2012). *Online Retail II* [Conjunto de datos]. UCI Machine Learning Re
 
 La ficha oficial informa que el conjunto corresponde a una tienda británica en línea que vende artículos de regalo. También advierte que contiene valores faltantes. No se importó porque no representa una empresa fabricante o distribuidora de equipo industrial mexicano: no contiene sucursales, transportistas, guías, costos de flete, RFC, régimen fiscal, ni la clasificación OMNIGOLD/HYVOLT/HYPRENE. Sus precios están expresados en libras esterlinas. Adaptarlo requeriría inventar la mayor parte de las relaciones y atributos del proyecto, por lo que no sería una fuente apropiada para poblar este esquema.
 
+### Correspondencia revisada (no importada)
+
+| Campo de Online Retail II | Posible destino en el esquema propio | Decisión |
+|---|---|---|
+| InvoiceNo | pedido.folio | No se importa: el identificador de factura pertenece a una tienda británica y algunos valores indican cancelación. |
+| StockCode | producto.claveProducto | No se importa: los códigos identifican artículos de regalo, no productos OMNIGOLD, HYVOLT o HYPRENE. |
+| Description | producto | No hay una columna de descripción de producto en el esquema recopilado; no se crea una columna solo para adaptar el conjunto. |
+| Quantity | detalle.cantidad | El significado de cantidad es parecido, pero los renglones corresponden a artículos de regalo y no a productos industriales del proyecto. |
+| InvoiceDate | pedido.dia, pedido.mes, pedido.anio | La fecha podría separarse en componentes, pero pertenece al periodo 2009–2011 y al negocio británico. |
+| UnitPrice | detalle.precioAplicado | No se importa: el importe está en libras esterlinas y no corresponde a la moneda USD del proyecto. |
+| CustomerID | cliente.numeroCliente | El identificador de cliente no aporta RFC, régimen fiscal ni la clasificación nacional/exportación requerida. |
+| Country | cliente.paisReceptor | El país podría mapearse parcialmente, pero no permite reconstruir los demás datos fiscales y comerciales del cliente. |
+
+La correspondencia muestra que algunos campos tienen nombres o significados cercanos, pero no existe una correspondencia suficiente para poblar las tablas sin inventar información. Por eso todos los campos del candidato quedan fuera de la carga del proyecto propio.
+
 **Fuente consultada:** UCI Machine Learning Repository, ficha oficial de [Online Retail II](https://archive.ics.uci.edu/dataset/502/online+retail+ii).
 
 También se revisó el conjunto *Online Retail*, con 541,909 registros y seis campos de negocio equivalentes, pero presenta el mismo problema de dominio: comercio minorista británico de regalos, no ventas industriales con transporte y sucursales. Se descartó por la misma razón.
