@@ -2,6 +2,8 @@
 -- Los errores esperados se capturan dentro de una función temporal; no quedan filas de prueba.
 BEGIN;
 
+CREATE TEMP TABLE _inicializar_pg_temp (id integer) ON COMMIT DROP;
+
 CREATE OR REPLACE FUNCTION pg_temp.esperar_error(
     p_nombre text, p_sql text, p_sqlstate text
 ) RETURNS void LANGUAGE plpgsql AS $$
