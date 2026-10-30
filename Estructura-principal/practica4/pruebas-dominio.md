@@ -1,6 +1,6 @@
 # Ejercicio 1.5. Pruebas de restricciones de dominio
 
-Las pruebas se encuentran en \`pruebas-dominio.sql\`. Deben ejecutarse después de aplicar la migración \`001-dominios.sql\) y cargar los datos. Se usa una transacción que termina en ROLLBACK para no conservar registros de prueba.
+Las pruebas se encuentran en `pruebas-dominio.sql`. Deben ejecutarse después de aplicar la migración `001-dominios.sql\) y cargar los datos. Se usa una transacción que termina en ROLLBACK para no conservar registros de prueba.
 
 | Caso | Operación intentada | Resultado esperado | SQLSTATE esperado | Regla protegida |
 |---:|---|---|---|---|
@@ -17,11 +17,11 @@ Las pruebas se encuentran en \`pruebas-dominio.sql\`. Deben ejecutarse después 
 
 ## Mensajes del gestor
 
-El archivo SQL captura el SQLSTATE y el texto real que devuelve PostgreSQL mediante \`RAISE NOTICE\`. No se inventa una salida de terminal: las líneas exactas se deben copiar de la ejecución local y adjuntar como evidencia. Si el SQLSTATE recibido no coincide con el esperado, el propio script detiene la prueba para señalar que algo debe revisarse.
+El archivo SQL captura el SQLSTATE y el texto real que devuelve PostgreSQL mediante `RAISE NOTICE`. No se inventa una salida de terminal: las líneas exactas se deben copiar de la ejecución local y adjuntar como evidencia. Si el SQLSTATE recibido no coincide con el esperado, el propio script detiene la prueba para señalar que algo debe revisarse.
 
 ## Ejecución
 
-\`\`\`powershell
+```powershell
 docker compose cp .\\practica4\\pruebas-dominio.sql db:/tmp/pruebas-dominio.sql
 docker compose exec -T db psql -U postgres -d ventas_industriales -f /tmp/pruebas-dominio.sql
-\`\`\`
+```
