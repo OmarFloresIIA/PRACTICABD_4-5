@@ -2,7 +2,7 @@
 
 ## Alcance
 
-El proyecto propio representa las ventas y envíos de una empresa que comercializa tres líneas de productos industriales: OMNIGOLD, HYVOLT y HYPRENE. El esquema relacional de referencia está en \`schema.sql\`; las restricciones adicionales se aplican mediante \`migraciones/001-dominios.sql\`.
+El proyecto propio representa las ventas y envíos de una empresa que comercializa tres líneas de productos industriales: OMNIGOLD, HYVOLT y HYPRENE. El esquema relacional de referencia está en `schema.sql`; las restricciones adicionales se aplican mediante `migraciones/001-dominios.sql`.
 
 ## Tipos de dato
 
@@ -56,11 +56,11 @@ El proyecto propio representa las ventas y envíos de una empresa que comerciali
 | envio | costoFlete | NUMERIC(12,2) | Importe monetario con dos decimales. |
 | envio | dia / mes / anio | SMALLINT | Fecha del envío descompuesta en componentes. |
 
-Los identificadores que pueden contener letras se guardan como texto. Los importes usan \`NUMERIC\`, porque son cantidades monetarias y requieren precisión decimal. Los teléfonos y códigos postales también se guardan como texto para no perder símbolos ni ceros iniciales.
+Los identificadores que pueden contener letras se guardan como texto. Los importes usan `NUMERIC`, porque son cantidades monetarias y requieren precisión decimal. Los teléfonos y códigos postales también se guardan como texto para no perder símbolos ni ceros iniciales.
 
 ## Dominios repetidos
 
-En este esquema se usan directamente tipos de PostgreSQL conocidos (\`BOOLEAN\`, \`DATE\`, \`NUMERIC\`, \`VARCHAR\` e \`INTEGER\`). No se crea un \`CREATE DOMAIN\` adicional porque las reglas principales cambian según la columna: por ejemplo, un teléfono, un RFC y un código postal tienen formatos diferentes. Las restricciones CHECK permiten expresar esas reglas junto a cada tabla.
+En este esquema se usan directamente tipos de PostgreSQL conocidos (`BOOLEAN`, `DATE`, `NUMERIC`, `VARCHAR` e `INTEGER`). No se crea un `CREATE DOMAIN` adicional porque las reglas principales cambian según la columna: por ejemplo, un teléfono, un RFC y un código postal tienen formatos diferentes. Las restricciones CHECK permiten expresar esas reglas junto a cada tabla.
 
 ## Restricciones de dominio declaradas
 
@@ -96,8 +96,8 @@ En este esquema se usan directamente tipos de PostgreSQL conocidos (\`BOOLEAN\`,
 | CHECK | envio.costoFlete | El costo de envío no puede ser negativo. |
 | CHECK | envio.dia / mes / anio | La fecha de envío debe existir en el calendario. |
 
-La PK compuesta de \`sucursal(numeroCliente, claveSucursal)\` y la de \`detalle(folio, claveParcial)\` también impiden repetir la combinación que identifica a cada sucursal o renglón. \`envio.folio\` es UNIQUE porque el modelo del proyecto contempla como máximo un envío por pedido.
+La PK compuesta de `sucursal(numeroCliente, claveSucursal)` y la de `detalle(folio, claveParcial)` también impiden repetir la combinación que identifica a cada sucursal o renglón. `envio.folio` es UNIQUE porque el modelo del proyecto contempla como máximo un envío por pedido.
 
 ## Observación sobre el esquema anterior
 
-El DDL recopilado declaraba \`tipoCliente VARCHAR(10)\`, pero el valor \`EXPORTACION\` tiene 11 caracteres. Se corrigió el tamaño antes de cargar los datos. Además, el diccionario de datos indicaba correo y teléfono obligatorios para cliente, mientras que el DDL permitía nulos; la migración hace coincidir la implementación con esa regla.
+El DDL recopilado declaraba `tipoCliente VARCHAR(10)`, pero el valor `EXPORTACION` tiene 11 caracteres. Se corrigió el tamaño antes de cargar los datos. Además, el diccionario de datos indicaba correo y teléfono obligatorios para cliente, mientras que el DDL permitía nulos; la migración hace coincidir la implementación con esa regla.
