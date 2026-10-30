@@ -44,6 +44,9 @@ FROM pedido WHERE folio=99300001;
 
 DELETE FROM detalle WHERE folio=99300001;
 DELETE FROM pedido WHERE folio=99300001;
+SELECT
+  (SELECT COUNT(*) FROM detalle WHERE folio=99300001) AS detalles_despues,
+  (SELECT COUNT(*) FROM pedido WHERE folio=99300001) AS pedido_despues;
 DELETE FROM cliente WHERE numerocliente=99300001;
 
 ROLLBACK;
