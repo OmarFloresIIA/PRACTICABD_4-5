@@ -15,7 +15,7 @@ docker compose -f docker/compose.yml up -d --build
 ## Verificar cifras antes de conectarse
 
 ```bash
-python scripts/generate_synthetic_data.py --verificar
+docker compose -f docker/compose.yml run --rm --entrypoint sh seed -c "pip install --quiet faker && python generate_synthetic_data.py --verificar"
 ```
 
 Esta opción revisa la población calculada por el generador sin abrir conexión a PostgreSQL. No reemplaza los conteos de las tablas.
