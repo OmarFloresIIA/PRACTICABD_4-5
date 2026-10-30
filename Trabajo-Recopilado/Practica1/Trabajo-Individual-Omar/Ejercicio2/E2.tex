@@ -1,0 +1,69 @@
+%?====== Configuración del documento ===============================
+\documentclass[12pt,letterpaper]{article}
+\usepackage[spanish]{babel}
+\renewcommand{\familydefault}{\sfdefault} % Usa Arial/Helvetica
+\usepackage{helvet}
+\renewcommand{\normalsize}{\fontsize{11pt}{13pt}\selectfont}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{setspace}
+\onehalfspacing % Interlineado 1.15 approx / 1.5
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.1em}
+\usepackage{graphicx}
+%?===================================================================
+
+%?============= Encabezados ===================
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Ejercicio 2}          % Izquierda
+\chead{\today}               % Centro
+\rhead{Flores Olivares Omar} % Derecha
+
+% Línea divisora bajo el encabezado
+\renewcommand{\headrulewidth}{0.4pt}
+\setlength{\headheight}{14.5pt}
+%?=============================================
+
+\title{\textbf{Ejercicio 2. El Sistema Gestor en un Contenedor: Docker}}
+\author{Omar Flores Olivares}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{Parte A. Investigación}
+
+\subsection*{1. Concepto de Contenedor y Diferencias con una Máquina Virtual}
+Un \textbf{contenedor} es un entorno ejecutable liviano, aislado y portátil que empaqueta una aplicación junto con todas sus dependencias, librerías y archivos de configuración requeridos para su correcto funcionamiento. A diferencia de una solución de virtualización tradicional, la diferencia fundamental radica en la arquitectura subyacente:
+
+\begin{itemize}
+    \item \textbf{Arranque:} Las máquinas virtuales (VM) requieren iniciar un sistema operativo huésped completo (\textit{Guest OS}) sobre un hipervisor, lo que demora minutos. Los contenedores comparten el núcleo (\textit{kernel}) del sistema operativo anfitrión y se inician en cuestión de milisegundos a pocos segundos.
+    \item \textbf{Tamaño:} Una máquina virtual incluye una imagen completa del sistema operativo con sus propios controladores y servicios, pesando habitualmente varios gigabytes (GB). Una imagen de contenedor contiene únicamente la aplicación y sus dependencias de usuario, ocupando únicamente decenas o cientos de megabytes (MB).
+    \item \textbf{Aislamiento:} Una máquina virtual ofrece un aislamiento fuerte a nivel de hardware garantizado por el hipervisor. Los contenedores proporcionan aislamiento a nivel de proceso utilizando funcionalidades del \textit{kernel} de Linux (como \textit{namespaces} y \textit{cgroups}), lo que reduce el sobrecosto de recursos procesales.
+\end{itemize}
+
+\subsection*{2. Definiciones}
+\begin{itemize}
+    \item \textbf{Imagen:} Es un archivo o plantilla de solo lectura que contiene las instrucciones, el código, el entorno de ejecución, las librerías y las variables necesarias para crear un contenedor.
+    
+    \item \textbf{Contenedor:} Es una instancia ejecutable de una imagen. Representa el proceso en ejecución aislado dentro del sistema anfitrión.
+    
+    \item \textbf{Volumen:} Es un mecanismo de almacenamiento persistente independiente del ciclo de vida del contenedor que permite guardar y compartir datos generados por las aplicaciones directamente en el sistema de archivos del anfitrión.
+    
+    \item \textbf{Puerto Publicado:} Es el mapeo explícito entre un puerto del sistema operativo anfitrión y un puerto interno del contenedor (\texttt{puerto\_anfitrión:puerto\_contenedor}), lo que permite dirigir el tráfico de red externo hacia el servicio que corre dentro del contenedor.
+\end{itemize}
+
+\subsection*{3. Importancia del Volumen y Persistencia de Datos}
+El \textbf{volumen} es un elemento indispensable al desplegar un sistema gestor de bases de datos en un contenedor debido a la naturaleza efímera e inmutable de los contenedores. Por diseño, cuando un contenedor se detiene y se elimina, todas las modificaciones realizadas en su capa de almacenamiento de escritura se pierden de forma permanente. 
+
+Si no se declara un volumen vinculado al directorio de datos del gestor (por ejemplo,\\ \texttt{/var/lib/postgresql/data} en PostgreSQL), todas las bases de datos, tablas y registros creados durante la ejecución del contenedor desaparecerán en el momento en que el contenedor sea removido o reiniciado. El volumen redirige la escritura hacia el almacenamiento físico de la computadora anfitriona, garantizando la persistencia de la información.
+
+\section*{Fuentes Consultadas}
+\begin{itemize}
+    \item Docker Docs. (2026). \textit{Docker Overview \& Volumes}. https://docs.docker.com/
+    \item PostgreSQL Global Development Group. (2026). \textit{PostgreSQL 16 Documentation}.\\ https://www.postgresql.org/docs/16/index.html
+\end{itemize}
+
+\end{document}
