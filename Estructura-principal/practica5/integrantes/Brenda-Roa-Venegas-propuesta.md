@@ -1,6 +1,6 @@
 # Ejercicio 2.6. Propuesta individual — Brenda Roa Venegas
 
-<badge>Propuesta pendiente de confirmación de Brenda</badge>
+**Estado:** propuesta pendiente de confirmación de Brenda.
 
 ## Relación propuesta
 
