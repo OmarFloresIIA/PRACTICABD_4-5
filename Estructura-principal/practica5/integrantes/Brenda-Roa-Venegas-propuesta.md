@@ -30,4 +30,6 @@ ALTER TABLE envio
 - **Desventaja:** el registro de envío pierde la referencia a quién lo realizó.
 - **Comparación con el original:** RESTRICT conserva la relación obligatoria y obliga a mantener el transportista; SET NULL conserva el envío, pero deja sin identificar al transportista eliminado.
 
+**Conclusión de dominio:** RESTRICT es la opción más segura para el modelo actual, porque el transportista forma parte de la trazabilidad de un envío. SET NULL conserva la guía, pero pierde la identificación de quién la realizó. La propuesta permite mostrar esa diferencia y concluir que conviene mantener RESTRICT salvo que el negocio permita conservar envíos sin transportista identificado.
+
 Esta propuesta debe ser confirmada por Brenda antes de considerarse su entrega individual. Se debe aplicar en una copia independiente de la base, no junto con el cambio de Omar.
