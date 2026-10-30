@@ -10,7 +10,7 @@ En el esquema original la acción es `ON DELETE RESTRICT`. Se propone probar `ON
 
 ## Cambio SQL
 
-Archivo: `cambio-brenda.sql`.
+Archivo: `002-referencias-brenda.sql`.
 
 ```sql
 ALTER TABLE envio ALTER COLUMN clavetransportista DROP NOT NULL;
