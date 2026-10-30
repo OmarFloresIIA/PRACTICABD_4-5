@@ -26,7 +26,7 @@ Esta opción revisa la población calculada por el generador sin abrir conexión
 docker compose -f docker/compose.yml --profile tools run --rm seed
 ```
 
-El servicio `seed` ejecuta el generador y después crea las cuentas de demostración. La conexión se toma de `DATABASE_URL`, que se construye con las variables de `.env`. El script no contiene contraseñas.
+El servicio `seed` ejecuta únicamente el generador de la práctica. La conexión se toma de `DATABASE_URL`, que se construye con las variables de `.env`. El script no contiene contraseñas. La utilidad opcional `seed_demo_users.py` queda separada y no forma parte de esta carga.
 
 La carga se realiza dentro de una sola transacción. Antes de regenerar, limpia únicamente la población sintética de la base de práctica; conserva los catálogos fijos de tiempo y tipos de evento. Si alguna operación falla, la transacción revierte el conjunto completo.
 
