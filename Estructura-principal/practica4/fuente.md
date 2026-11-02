@@ -34,7 +34,7 @@ No se trata de un conjunto publicado por una institución ni de un dataset con l
 | pedido | 1,500 | folio, numeroCliente, estatus, dia, mes, anio, activo |
 | detalle | 1,500 | folio, claveParcial, claveProducto, costoProduccion, precioAplicado, cantidad |
 | envio | 1,500 | numeroGuia, folio, claveTransportista, numeroCliente, claveSucursal, costoFlete, dia, mes, anio |
-| Notas | 10 filas de metadatos | Descripción de la generación y decisiones usadas para preparar las hojas; no se carga como tabla relacional. |
+| Notas | 11 filas de metadatos | Descripción de la generación y decisiones usadas para preparar las hojas; no se carga como tabla relacional. |
 
 ## Correspondencia entre la fuente y el esquema
 
