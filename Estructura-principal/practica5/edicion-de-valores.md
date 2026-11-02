@@ -1,19 +1,19 @@
 # Ejercicio 2.4. Edición de valores y transacciones
 
-Las operaciones ejecutables se encuentran en sql/edicion-de-valores.sql. Se basan en pedidos, detalles, productos, sucursales y envíos del conjunto sintético.
+Las operaciones se encuentran en sql/edicion-de-valores.sql. Se basan en la relación entre clientes, sucursales, pedidos, detalles, productos y envíos de la fuente sintética revisada.
 
-1. **INSERT desde SELECT:** crea una sucursal temporal de demostración copiando la dirección de una sucursal existente. Se repite la inserción con ON CONFLICT DO NOTHING para mostrar que la clave compuesta impide duplicados.
-2. **UPDATE que usa otra tabla:** modifica un renglón de detalle para tomar el precio de catálogo desde producto, relacionando ambas tablas por claveProducto.
-3. **UPDATE con CASE:** clasifica un pedido como ENVIADO si existe un registro relacionado en envio; en otro caso lo clasifica como ENTREGADO. Son los dos estados observados en la fuente.
-4. **DELETE con subconsulta:** crea un pedido de demostración, un detalle y un envío. Como envio -> pedido usa RESTRICT, primero elimina el envío; después elimina el pedido mediante una subconsulta basada en detalle. La acción CASCADE elimina los detalles dependientes.
-5. **Borrado lógico:** cambia activo a FALSE sin eliminar el pedido ni sus detalles. Es útil para conservar historial; el borrado físico elimina el pedido y, por CASCADE, sus detalles.
-6. **Transacción con SAVEPOINT:** inserta pedido y detalle; después inserta un envío. ROLLBACK TO SAVEPOINT revierte solamente el envío, conserva pedido y detalle, y COMMIT confirma esa parte. Una transacción posterior elimina el pedido temporal y su detalle para dejar intacta la población original.
-7. **Transacción fallida:** inserta un pedido y trata de crear un detalle con una claveProducto que no existe. PostgreSQL rechaza el detalle por la FK; ROLLBACK cancela también el pedido. La consulta final debe devolver cero.
+1. **INSERT desde SELECT:** crea una sucursal temporal copiando la dirección de una sucursal existente. La segunda inserción repite la misma clave compuesta y usa ON CONFLICT DO NOTHING para evitar duplicados.
+2. **UPDATE que depende de otra tabla:** actualiza el precio aplicado de un detalle a partir del precio de catálogo en producto, mediante claveProducto.
+3. **UPDATE con CASE:** clasifica el pedido según su estado y la existencia de un envío relacionado. Conserva CANCELADO, mantiene ENVIADO cuando corresponde, clasifica como ENTREGADO si existe envío y como EN PROCESO cuando todavía no existe.
+4. **DELETE con subconsulta:** crea un pedido temporal, un detalle y un envío. Primero elimina el envío porque la FK envio -> pedido usa RESTRICT. Después elimina el pedido mediante una subconsulta basada en detalle. Como detalle -> pedido usa CASCADE, el renglón hijo también desaparece.
+5. **Borrado lógico:** cambia activo a FALSE sin eliminar el pedido ni sus detalles. Permite conservar el historial. La primera transacción termina con ROLLBACK para recuperar la población del Excel.
+6. **Transacción con SAVEPOINT:** inserta pedido y detalle; guarda un punto de recuperación; inserta temporalmente un envío y actualiza el estatus. ROLLBACK TO SAVEPOINT revierte el envío y el cambio posterior, pero conserva el pedido y el detalle. COMMIT confirma el bloque restante; después se elimina el pedido de demostración y sus detalles por CASCADE.
+7. **Transacción fallida:** inserta un pedido y después intenta crear un detalle que referencia un producto inexistente. PostgreSQL rechaza el segundo INSERT por FK y ROLLBACK revierte también el pedido. La consulta final debe mostrar cero.
 
-## Relación con las reglas de la fuente
+## Reglas de la fuente utilizadas
 
-Los estados usados son ENVIADO y ENTREGADO, porque son los únicos presentes en la hoja pedido. La columna activo existe en el Excel y se conserva; la migración la agrega al DDL original. No se usa un precioAplicado arbitrario ni se impone la condición de que siempre sea mayor que costoProduccion, ya que tres detalles originales no cumplen esa comparación.
+La fuente contiene los estados ENTREGADO, CANCELADO, ENVIADO y EN PROCESO. Las notas del archivo contemplan REGISTRADO como estado inicial, por lo que la migración lo permite y lo usa como DEFAULT. Los 1,500 detalles cumplen precioAplicado >= costoProduccion; la migración impide que se inserten nuevos detalles por debajo del costo.
 
 ## Evidencia pendiente
 
-Al ejecutar el archivo en PostgreSQL se deben guardar los mensajes y conteos reales, especialmente el detalle del rechazo por FK y la consulta que demuestra que el pedido de la transacción fallida no quedó guardado. Los ejemplos temporales se limpian para no alterar la población original. No se inventan tiempos ni salidas del gestor.
+Al ejecutar el SQL en PostgreSQL deben guardarse los conteos reales, los mensajes de FK y el resultado que demuestra que el pedido de la transacción fallida no quedó almacenado. Los ejemplos temporales se limpian y no cambian la población original. No se inventan salidas del gestor.
