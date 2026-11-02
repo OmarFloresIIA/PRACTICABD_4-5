@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Carga el Excel sintético del proyecto propio en PostgreSQL.
+"""Carga el Excel sintético revisado del proyecto propio en PostgreSQL.
 
-Fuente: practica4/datos/base_datos_pedidos.xlsx
-Requisitos: psycopg2-binary, openpyxl y python-dotenv.
-La carga es transaccional, usa COPY y puede repetirse sin duplicar claves.
+Fuente: practica4/datos/base_datos_pedidos2.xlsx
+Carga transaccional con COPY, en orden de dependencia, sin duplicar claves.
 """
 from __future__ import annotations
 
@@ -21,9 +20,9 @@ from dotenv import load_dotenv
 from openpyxl import load_workbook
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_FILE = ROOT / "practica4" / "datos" / "base_datos_pedidos.xlsx"
+DEFAULT_FILE = ROOT / "practica4" / "datos" / "base_datos_pedidos2.xlsx"
 
-# Encabezados exactos del XLSX y nombres equivalentes en PostgreSQL.
+# Nombre de hoja, tabla de PostgreSQL y columnas en orden de importación.
 TABLES = [
     ("cliente", "cliente",
      ["numerocliente", "razonsocial", "correocliente", "telefonocliente",
@@ -48,6 +47,38 @@ TABLES = [
       "clavesucursal", "costoflete", "dia", "mes", "anio"]),
 ]
 
+# Conteos de control de esta versión del Excel. Si la fuente cambia,
+# revisar fuente.md y actualizar estos valores conscientemente.
+EXPECTED_ROWS = {
+    "cliente": 80,
+    "transportista": 30,
+    "producto": 40,
+    "sucursal": 100,
+    "pedido": 500,
+    "detalle": 1500,
+    "envio": 452,
+}
+
+HEADERS = {
+    "cliente": ["numeroCliente", "razonSocial", "correoCliente", "telefonoCliente",
+                "tipoCliente", "RFC", "regimenFiscal", "estadoOrigen",
+                "idFiscalGlobal", "paisReceptor"],
+    "transportista": ["claveTransportista", "nombreEmpresa", "telefonoAtencion",
+                      "email", "esNacional", "esInternacional", "RFC",
+                      "codigoAduanal", "agenciaAduanal"],
+    "producto": ["claveProducto", "modeloProducto", "costoUnitarioUSD",
+                 "precioUnitarioUSD", "tipoProducto", "provMaquinaria",
+                 "provTransformador", "provTransporte"],
+    "sucursal": ["numeroCliente", "claveSucursal", "nombrePlanta",
+                 "telefonoEncargado", "calle", "numero", "ciudad",
+                 "estado", "pais", "CP"],
+    "pedido": ["folio", "numeroCliente", "estatus", "dia", "mes", "anio", "activo"],
+    "detalle": ["folio", "claveParcial", "claveProducto", "costoProduccion",
+                "precioAplicado", "cantidad"],
+    "envio": ["numeroGuia", "folio", "claveTransportista", "numeroCliente",
+              "claveSucursal", "costoFlete", "dia", "mes", "anio"],
+}
+
 def obtener_dsn() -> str:
     load_dotenv(ROOT / ".env")
     dsn = os.getenv("DATABASE_URL")
@@ -57,8 +88,8 @@ def obtener_dsn() -> str:
     password = os.getenv("APP_DB_PASSWORD")
     if not password:
         raise RuntimeError(
-            "Falta DATABASE_URL o APP_DB_PASSWORD. Revisa el archivo .env "
-            "y las instrucciones de practica4/permisos.md."
+            "Falta DATABASE_URL o APP_DB_PASSWORD. Revisa .env y "
+            "practica4/permisos.md."
         )
     return make_dsn(
         dbname=os.getenv("POSTGRES_DB", "ventas_industriales"),
@@ -72,62 +103,49 @@ def leer_excel(ruta: Path):
     if not ruta.is_file():
         raise FileNotFoundError(
             f"No se encontró el archivo fuente: {ruta}\n"
-            "Coloca base_datos_pedidos.xlsx en practica4/datos/."
+            "Coloca base_datos_pedidos2.xlsx en practica4/datos/."
         )
 
     libro = load_workbook(ruta, read_only=True, data_only=True)
     datos = []
     try:
-        hojas_requeridas = {hoja for hoja, _, _ in TABLES}
-        faltantes = hojas_requeridas - set(libro.sheetnames)
+        faltantes = {hoja for hoja, _, _ in TABLES} - set(libro.sheetnames)
         if faltantes:
-            raise ValueError(f"Faltan hojas requeridas en el XLSX: {sorted(faltantes)}")
+            raise ValueError(f"Faltan hojas requeridas: {sorted(faltantes)}")
 
         for hoja, tabla, columnas in TABLES:
             ws = libro[hoja]
-            filas = ws.iter_rows(values_only=True)
-            encabezados = next(filas, None)
-            if encabezados is None:
-                raise ValueError(f"La hoja {hoja} está vacía.")
-            encabezados = [str(x).strip() if x is not None else "" for x in encabezados]
-            esperados = {
-                "cliente": ["numeroCliente", "razonSocial", "correoCliente", "telefonoCliente",
-                            "tipoCliente", "RFC", "regimenFiscal", "estadoOrigen",
-                            "idFiscalGlobal", "paisReceptor"],
-                "transportista": ["claveTransportista", "nombreEmpresa", "telefonoAtencion",
-                                  "email", "esNacional", "esInternacional", "RFC",
-                                  "codigoAduanal", "agenciaAduanal"],
-                "producto": ["claveProducto", "modeloProducto", "costoUnitarioUSD",
-                             "precioUnitarioUSD", "tipoProducto", "provMaquinaria",
-                             "provTransformador", "provTransporte"],
-                "sucursal": ["numeroCliente", "claveSucursal", "nombrePlanta",
-                             "telefonoEncargado", "calle", "numero", "ciudad",
-                             "estado", "pais", "CP"],
-                "pedido": ["folio", "numeroCliente", "estatus", "dia", "mes", "anio", "activo"],
-                "detalle": ["folio", "claveParcial", "claveProducto", "costoProduccion",
-                            "precioAplicado", "cantidad"],
-                "envio": ["numeroGuia", "folio", "claveTransportista", "numeroCliente",
-                          "claveSucursal", "costoFlete", "dia", "mes", "anio"],
-            }[hoja]
-            if encabezados != esperados:
+            iterator = ws.iter_rows(values_only=True)
+            encabezados = next(iterator, None)
+            encabezados = [
+                str(valor).strip() if valor is not None else ""
+                for valor in (encabezados or [])
+            ]
+            if encabezados != HEADERS[hoja]:
                 raise ValueError(
-                    f"Los encabezados de {hoja} no coinciden.\n"
-                    f"Esperados: {esperados}\nRecibidos: {encabezados}"
+                    f"Encabezados incorrectos en hoja {hoja}.\n"
+                    f"Esperados: {HEADERS[hoja]}\nRecibidos: {encabezados}"
                 )
 
             registros = []
-            for numero_fila, fila in enumerate(filas, start=2):
+            for numero_fila, fila in enumerate(iterator, start=2):
                 fila = list(fila[:len(columnas)])
                 if not fila or all(valor is None or valor == "" for valor in fila):
                     continue
                 if len(fila) != len(columnas):
-                    raise ValueError(f"{hoja}, fila {numero_fila}: número de columnas incorrecto.")
-                registros.append(tuple(None if valor == "" else valor for valor in fila))
+                    raise ValueError(
+                        f"Hoja {hoja}, fila {numero_fila}: "
+                        "número de columnas incorrecto."
+                    )
+                registros.append(
+                    tuple(None if valor == "" else valor for valor in fila)
+                )
 
-            if len(registros) < 200:
+            esperado = EXPECTED_ROWS[tabla]
+            if len(registros) != esperado:
                 raise ValueError(
-                    f"La hoja {hoja} contiene {len(registros)} registros; "
-                    "se esperaban al menos 200 para esta práctica."
+                    f"Conteo inesperado en hoja {hoja}: {len(registros)} filas; "
+                    f"la versión documentada debe tener {esperado}."
                 )
             datos.append((tabla, columnas, registros))
     finally:
@@ -135,6 +153,7 @@ def leer_excel(ruta: Path):
     return datos
 
 def copiar_tabla(cur, tabla: str, columnas: list[str], filas):
+    """Usa COPY en staging y transfiere a la tabla definitiva sin duplicar PK."""
     temporal = f"stg_{tabla}"
     cur.execute(
         sql.SQL("CREATE TEMP TABLE {} (LIKE public.{} INCLUDING DEFAULTS) ON COMMIT DROP")
@@ -142,8 +161,8 @@ def copiar_tabla(cur, tabla: str, columnas: list[str], filas):
     )
 
     buffer = StringIO()
-    escritor = csv.writer(buffer, lineterminator="\n")
-    escritor.writerows(filas)
+    writer = csv.writer(buffer, lineterminator="\n")
+    writer.writerows(filas)
     buffer.seek(0)
 
     columnas_sql = sql.SQL(", ").join(sql.Identifier(c) for c in columnas)
@@ -165,24 +184,31 @@ def copiar_tabla(cur, tabla: str, columnas: list[str], filas):
     return len(filas), insertadas, len(filas) - insertadas
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Carga el Excel del proyecto propio.")
-    parser.add_argument("--archivo", type=Path, default=DEFAULT_FILE,
-                        help="Ruta al XLSX fuente (por defecto practica4/datos/base_datos_pedidos.xlsx).")
+    parser = argparse.ArgumentParser(
+        description="Carga la versión revisada del Excel de pedidos."
+    )
+    parser.add_argument(
+        "--archivo",
+        type=Path,
+        default=DEFAULT_FILE,
+        help="Ruta del XLSX fuente.",
+    )
     args = parser.parse_args()
 
     conexion = None
     tabla_actual = "validación del archivo"
     try:
         datos = leer_excel(args.archivo)
-        dsn = obtener_dsn()
-        conexion = psycopg2.connect(dsn)
+        conexion = psycopg2.connect(obtener_dsn())
         conexion.autocommit = False
 
         resultados = []
         with conexion.cursor() as cur:
             for tabla, columnas, filas in datos:
                 tabla_actual = tabla
-                total, insertadas, existentes = copiar_tabla(cur, tabla, columnas, filas)
+                total, insertadas, existentes = copiar_tabla(
+                    cur, tabla, columnas, filas
+                )
                 resultados.append((tabla, total, insertadas, existentes))
 
         conexion.commit()
@@ -191,8 +217,8 @@ def main() -> int:
         print("|---|---:|---:|---:|---:|")
         for tabla, total, insertadas, existentes in resultados:
             print(f"| {tabla} | {total} | {insertadas} | {existentes} | 0 |")
-        print("Total de registros leídos:", sum(x[1] for x in resultados))
-        print("La segunda ejecución debe mostrar los registros como ya existentes.")
+        print("Total:", sum(item[1] for item in resultados), "registros.")
+        print("Repite el comando para comprobar que no se duplican las claves.")
         return 0
 
     except Exception as exc:
@@ -208,7 +234,10 @@ def main() -> int:
                 print("Restricción:", exc.diag.constraint_name, file=sys.stderr)
             if exc.diag.message_detail:
                 print("Detalle de PostgreSQL:", exc.diag.message_detail, file=sys.stderr)
-        print("No se confirmó ninguna tabla; se ejecutó ROLLBACK.", file=sys.stderr)
+        print(
+            "No se confirmó ninguna tabla: se ejecutó ROLLBACK.",
+            file=sys.stderr,
+        )
         return 1
     finally:
         if conexion is not None:
