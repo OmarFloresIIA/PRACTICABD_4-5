@@ -1,15 +1,19 @@
 # Ejercicio 2.4. Edición de valores y transacciones
 
-Las operaciones ejecutables están en `sql/edicion-de-valores.sql`. Deben probarse sobre una copia de la base poblada.
+Las operaciones ejecutables se encuentran en sql/edicion-de-valores.sql. Se basan en pedidos, detalles, productos, sucursales y envíos del conjunto sintético.
 
-1. **INSERT desde SELECT:** crea una sucursal de demostración copiando los datos de dirección de una sucursal existente. `ON CONFLICT (numerocliente, clavesucursal) DO NOTHING` evita duplicarla si el comando se repite.
-2. **UPDATE con otra tabla:** actualiza el precio aplicado en cada detalle usando el precio de lista del producto asociado. La relación se establece con `detalle.claveproducto = producto.claveproducto`.
-3. **UPDATE con CASE:** cambia a ENVIADO el estado de los pedidos que ya tienen un envío. Si el pedido está inactivo, lo clasifica como CANCELADO; en otro caso conserva el estado.
-4. **DELETE con subconsulta:** elimina pedidos cancelados que no tengan envío. La FK de detalle a pedido usa CASCADE, por lo que también se eliminan sus renglones. La FK de pedido a cliente usa RESTRICT y no permite borrar al cliente con su historial.
-5. **Borrado lógico:** `activo = FALSE` conserva el pedido y sus detalles. Conviene cuando se necesita mantener el historial; el borrado físico elimina el registro y, por CASCADE, sus detalles.
-6. **Transacción con punto de recuperación:** inserta un pedido y su detalle. Después crea un SAVEPOINT, intenta añadir un envío y revierte solo esa parte. El pedido y su detalle se confirman.
-7. **Fallo a mitad de transacción:** se inserta un pedido y después se intenta insertar un detalle con un producto inexistente. La FK provoca un error; ROLLBACK revierte también el pedido, lo que se comprueba con un COUNT de cero.
+1. **INSERT desde SELECT:** crea una sucursal temporal de demostración copiando la dirección de una sucursal existente. Se repite la inserción con ON CONFLICT DO NOTHING para mostrar que la clave compuesta impide duplicados.
+2. **UPDATE que usa otra tabla:** modifica un renglón de detalle para tomar el precio de catálogo desde producto, relacionando ambas tablas por claveProducto.
+3. **UPDATE con CASE:** clasifica un pedido como ENVIADO si existe un registro relacionado en envio; en otro caso lo clasifica como ENTREGADO. Son los dos estados observados en la fuente.
+4. **DELETE con subconsulta:** crea un pedido de demostración, un detalle y un envío. Como envio -> pedido usa RESTRICT, primero elimina el envío; después elimina el pedido mediante una subconsulta basada en detalle. La acción CASCADE elimina los detalles dependientes.
+5. **Borrado lógico:** cambia activo a FALSE sin eliminar el pedido ni sus detalles. Es útil para conservar historial; el borrado físico elimina el pedido y, por CASCADE, sus detalles.
+6. **Transacción con SAVEPOINT:** inserta pedido y detalle; después inserta un envío. ROLLBACK TO SAVEPOINT revierte solamente el envío, conserva pedido y detalle, y COMMIT confirma esa parte. Una transacción posterior elimina el pedido temporal y su detalle para dejar intacta la población original.
+7. **Transacción fallida:** inserta un pedido y trata de crear un detalle con una claveProducto que no existe. PostgreSQL rechaza el detalle por la FK; ROLLBACK cancela también el pedido. La consulta final debe devolver cero.
+
+## Relación con las reglas de la fuente
+
+Los estados usados son ENVIADO y ENTREGADO, porque son los únicos presentes en la hoja pedido. La columna activo existe en el Excel y se conserva; la migración la agrega al DDL original. No se usa un precioAplicado arbitrario ni se impone la condición de que siempre sea mayor que costoProduccion, ya que tres detalles originales no cumplen esa comparación.
 
 ## Evidencia pendiente
 
-La práctica requiere conservar la salida auténtica del gestor: número de filas afectadas, error de FK y comprobación posterior al ROLLBACK. Los scripts están preparados, pero esos mensajes deben capturarse al ejecutarlos localmente.
+Al ejecutar el archivo en PostgreSQL se deben guardar los mensajes y conteos reales, especialmente el detalle del rechazo por FK y la consulta que demuestra que el pedido de la transacción fallida no quedó guardado. Los ejemplos temporales se limpian para no alterar la población original. No se inventan tiempos ni salidas del gestor.
