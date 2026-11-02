@@ -52,6 +52,8 @@ ALTER TABLE sucursal
   ADD CONSTRAINT ck_sucursal_cp_formato
   CHECK (cp IS NULL OR cp ~ '^[0-9]{5}$');
 
+-- La fuente agrega modeloProducto. HYGOLD se clasifica como OMNIGOLD
+-- conforme a la nota de generación del propio Excel.
 ALTER TABLE producto
   ADD COLUMN modeloproducto VARCHAR(30) NOT NULL;
 
@@ -81,10 +83,14 @@ ALTER TABLE producto
 
 ALTER TABLE producto
   ADD CONSTRAINT ck_producto_precio_cubre_costo
-  CHECK (preciounitariousd > costounitariousd);
+  CHECK (preciounitariousd >= costounitariousd);
 
+-- La fuente agrega activo y el diccionario admite los cinco estatus.
 ALTER TABLE pedido
   ADD COLUMN activo BOOLEAN NOT NULL DEFAULT TRUE;
+
+ALTER TABLE pedido
+  ALTER COLUMN estatus SET DEFAULT 'REGISTRADO';
 
 ALTER TABLE pedido
   ADD CONSTRAINT ck_pedido_estatus
@@ -104,6 +110,6 @@ ALTER TABLE detalle
 
 ALTER TABLE detalle
   ADD CONSTRAINT ck_detalle_precio_cubre_costo
-  CHECK (precioaplicado > costoproduccion);
+  CHECK (precioaplicado >= costoproduccion);
 
 COMMIT;
