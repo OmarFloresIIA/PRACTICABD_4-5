@@ -1,6 +1,6 @@
--- Ejercicio 1.5. Diez pruebas de restricciones de dominio.
--- Ejecutar después de esquema.sql y 001-dominios.sql, con la BD ya migrada.
--- La transacción se revierte al final para no conservar datos de prueba.
+-- Ejercicio 1.5. Pruebas de restricciones de dominio.
+-- Ejecutar después de esquema.sql, 001-dominios.sql y de cargar el Excel.
+-- Los cambios temporales se revierten al final.
 BEGIN;
 
 CREATE OR REPLACE FUNCTION pg_temp.esperar_error(
@@ -29,7 +29,7 @@ BEGIN
 END;
 $$;
 
--- 1. NOT NULL: correoCliente es obligatorio en cliente.
+-- 1. NOT NULL: correoCliente es obligatorio.
 SELECT pg_temp.esperar_error(
  'NOT NULL en correo del cliente',
  'INSERT INTO cliente (numerocliente,razonsocial,correocliente,telefonocliente,tipocliente,rfc,regimenfiscal,estadoorigen)
@@ -37,14 +37,14 @@ SELECT pg_temp.esperar_error(
  '23502'
 );
 
--- 2. DEFAULT: al omitir activo, un pedido nuevo queda activo.
-INSERT INTO pedido (folio,numerocliente,estatus,dia,mes,anio)
-SELECT 99000002,MIN(numerocliente),'ENVIADO',1,1,2026 FROM cliente;
-SELECT folio, activo AS valor_default_esperado_true
+-- 2. DEFAULT: al omitir estatus y activo, toma REGISTRADO y TRUE.
+INSERT INTO pedido (folio,numerocliente,dia,mes,anio)
+SELECT 99000002,MIN(numerocliente),1,1,2026 FROM cliente;
+SELECT folio,estatus,activo
 FROM pedido WHERE folio=99000002;
 DELETE FROM pedido WHERE folio=99000002;
 
--- 3. UNIQUE simple: no se permite repetir el correo de cliente.
+-- 3. UNIQUE simple: correo de cliente no se repite.
 SELECT pg_temp.esperar_error(
  'UNIQUE simple en correo de cliente',
  'INSERT INTO cliente (numerocliente,razonsocial,correocliente,telefonocliente,tipocliente,rfc,regimenfiscal,estadoorigen)
@@ -53,7 +53,7 @@ SELECT pg_temp.esperar_error(
  '23505'
 );
 
--- 4. UNIQUE compuesta: no se repite la pareja cliente/sucursal.
+-- 4. UNIQUE compuesta: no se repite cliente + claveSucursal.
 SELECT pg_temp.esperar_error(
  'UNIQUE compuesta de sucursal',
  'INSERT INTO sucursal (numerocliente,clavesucursal,nombreplanta)
@@ -61,7 +61,7 @@ SELECT pg_temp.esperar_error(
  '23505'
 );
 
--- 5. CHECK de rango: la cantidad de un detalle debe ser positiva.
+-- 5. CHECK de rango: cantidad del detalle debe ser positiva.
 SELECT pg_temp.esperar_error(
  'CHECK de cantidad positiva',
  'INSERT INTO detalle (folio,claveparcial,claveproducto,costoproduccion,precioaplicado,cantidad)
@@ -69,7 +69,7 @@ SELECT pg_temp.esperar_error(
  '23514'
 );
 
--- 6. CHECK de formato: correo inválido.
+-- 6. CHECK de formato: correo sin arroba.
 SELECT pg_temp.esperar_error(
  'CHECK de formato de correo',
  'INSERT INTO cliente (numerocliente,razonsocial,correocliente,telefonocliente,tipocliente,rfc,regimenfiscal,estadoorigen)
@@ -77,15 +77,15 @@ SELECT pg_temp.esperar_error(
  '23514'
 );
 
--- 7. CHECK entre columnas: precio de catálogo no puede ser menor que costo.
+-- 7. CHECK entre columnas: precio de catálogo menor que costo.
 SELECT pg_temp.esperar_error(
- 'CHECK de precio de catálogo vs costo',
+ 'CHECK de precio unitario vs costo',
  'INSERT INTO producto (claveproducto,modeloproducto,costounitariousd,preciounitariousd,tipoproducto,provmaquinaria)
   VALUES (''PRUEBA990'',''OMNIGOLD P220N'',100,90,''OMNIGOLD'',''Proveedor de prueba'')',
  '23514'
 );
 
--- 8. CHECK de lista: en esta versión solo aparecen ENVIADO y ENTREGADO.
+-- 8. CHECK de lista: PAGADO no es un estado permitido.
 SELECT pg_temp.esperar_error(
  'CHECK de estatus permitido',
  'INSERT INTO pedido (folio,numerocliente,estatus,dia,mes,anio)
@@ -93,7 +93,7 @@ SELECT pg_temp.esperar_error(
  '23514'
 );
 
--- 9. CHECK de fecha: 31 de febrero no es una fecha válida.
+-- 9. CHECK de fecha: 31 de febrero no existe.
 SELECT pg_temp.esperar_error(
  'CHECK de fecha válida',
  'INSERT INTO pedido (folio,numerocliente,estatus,dia,mes,anio)
@@ -106,6 +106,14 @@ SELECT pg_temp.esperar_error(
  'CHECK de código postal',
  'INSERT INTO sucursal (numerocliente,clavesucursal,nombreplanta,cp)
   SELECT MIN(numerocliente),''CPBAD'',''Sucursal CP inválido'',''ABC12'' FROM cliente',
+ '23514'
+);
+
+-- 11. CHECK de precio aplicado: no puede ser menor al costo de producción.
+SELECT pg_temp.esperar_error(
+ 'CHECK de precio aplicado vs costo de producción',
+ 'INSERT INTO detalle (folio,claveparcial,claveproducto,costoproduccion,precioaplicado,cantidad)
+  SELECT p.folio,998,pr.claveproducto,100,90,1 FROM pedido p CROSS JOIN producto pr LIMIT 1',
  '23514'
 );
 
