@@ -8,9 +8,9 @@ Grupo: 3BV1. Gestor del proyecto propio: PostgreSQL 17.
 
 ## Proyecto propio
 
-El proyecto representa ventas y envíos de tres líneas industriales: OMNIGOLD, HYVOLT y HYPRENE. La población principal proviene del archivo sintético base_datos_pedidos.xlsx, elaborado a partir de una estructura relacional modificada y abstraída de una base privada. El equipo describió esa estructura a Claude (Anthropic), que colaboró en la generación aleatoria y estructurada de los registros.
+El proyecto representa las ventas y los envíos de tres líneas industriales: OMNIGOLD, HYVOLT y HYPRENE. La población principal se encuentra en el Excel sintético base_datos_pedidos2.xlsx. El equipo adaptó la estructura de referencia de una base privada, explicó el modelo y sus reglas a Claude (Anthropic), y Claude colaboró en la generación aleatoria y controlada de los registros.
 
-Los registros del Excel son sintéticos; no son ventas reales ni deben presentarse como datos de la empresa privada. La documentación de procedencia, campos, nulos y calidad está en practica4/fuente.md.
+El Excel contiene 80 clientes, 30 transportistas, 40 productos, 100 sucursales, 500 pedidos, 1,500 detalles y 452 envíos (2,702 registros en total). Todos los registros son sintéticos; no son ventas reales ni datos de la empresa privada. La procedencia, correspondencia de campos y calidad se documentan en practica4/fuente.md.
 
 ### Preparar el entorno (Windows / PowerShell)
 
@@ -26,11 +26,11 @@ El esquema base se crea al inicializar el volumen por primera vez. Si ya existí
 
 ### Colocar el archivo fuente
 
-Copia el archivo base_datos_pedidos.xlsx en:
+Copia el archivo recibido base_datos_pedidos2.xlsx en:
 
-    practica4/datos/base_datos_pedidos.xlsx
+    practica4/datos/base_datos_pedidos2.xlsx
 
-El archivo se puede obtener del chat donde se entregó. La carpeta practica4/datos/README.md explica las hojas que espera el programa. El binario no se incluye en este commit y no se debe sustituir por una generación aleatoria distinta.
+La carpeta practica4/datos/README.md explica las hojas y cantidades que espera el programa. El archivo binario debe agregarse a esa carpeta antes de ejecutar la carga; no se debe sustituir por una generación aleatoria distinta.
 
 ### Aplicar dominios y restricciones
 
@@ -53,9 +53,12 @@ Sigue practica4/permisos.md. El usuario de carga es usuario_app. Las contraseña
     pip install -r .\practica4\poblar\requirements.txt
     $env:DATABASE_URL = "postgresql://usuario_app:TU_CLAVE@localhost:5434/ventas_industriales"
     py .\practica4\poblar\poblar.py
+    py .\practica4\poblar\poblar.py
     py .\practica4\poblar\comparar-copy-insert.py
 
-El script lee las siete hojas relacionales, valida encabezados y carga las tablas en orden de dependencia mediante COPY. Usa DATABASE_URL con el rol usuario_app, no con el administrador. La transacción es de todo o nada: si una fila incumple una restricción, se ejecuta ROLLBACK. El programa informa filas leídas, insertadas y ya existentes; una segunda ejecución no duplica registros. La comparación INSERT/COPY mide los 1,500 pedidos de la misma fuente y reporta los tiempos reales de tu equipo.
+El primer comando carga las siete hojas en orden de dependencia usando COPY hacia tablas temporales y una transacción completa. El segundo comando comprueba la repetibilidad: las claves ya existentes se reportan como registros existentes, sin duplicarlos. El cargador valida los conteos de esta versión del Excel (80, 30, 40, 100, 500, 1,500 y 452) antes de conectarse a la base. Usa DATABASE_URL con usuario_app, no con el administrador. Si una restricción rechaza una fila, ejecuta ROLLBACK para no dejar una carga parcial.
+
+El programa de comparación mide INSERT individual y COPY con los 1,500 renglones de detalle de la misma fuente. Los tiempos que se registran deben ser los de tu equipo; no se incluyen tiempos inventados.
 
 ### Ejecutar pruebas
 
@@ -65,18 +68,18 @@ El script lee las siete hojas relacionales, valida encabezados y carga las tabla
     docker compose cp .\practica5\pruebas-referenciales.sql db:/tmp/pruebas-referenciales.sql
     docker compose exec -T db psql -U postgres -d ventas_industriales -v ON_ERROR_STOP=1 -f /tmp/pruebas-referenciales.sql
 
-Las pruebas usan transacciones y ROLLBACK para conservar la fuente sin cambios. Sigue los archivos MD para interpretar cada caso y capturar la salida real del gestor.
+Las pruebas usan transacciones y ROLLBACK para conservar la fuente sin cambios. Sigue los archivos MD para interpretar cada caso y guardar la salida real del gestor.
 
 ## Archivos principales
 
 - esquema.sql: esquema relacional base de la Práctica 3.
 - practica4/dominios.md: tipos, longitudes y restricciones.
-- practica4/fuente.md: procedencia, correspondencia y calidad del Excel sintético.
-- practica4/datos/: ubicación local del archivo fuente.
+- practica4/fuente.md: procedencia, colaboración de Claude, correspondencia y calidad del Excel.
+- practica4/datos/: ubicación del archivo fuente.
 - practica4/migraciones/001-dominios.sql: dominios y restricciones del proyecto propio.
-- practica4/poblar/poblar.py: carga desde Excel mediante COPY.
-- practica4/poblar/comparar-copy-insert.py: benchmark de los 1,500 pedidos.
-- practica4/pruebas-dominio.md y .sql: casos de restricciones.
+- practica4/poblar/poblar.py: carga del Excel mediante COPY.
+- practica4/poblar/comparar-copy-insert.py: benchmark de los 1,500 detalles.
+- practica4/pruebas-dominio.md y .sql: once casos de restricciones.
 - practica4/permisos.md y .sql: roles y privilegios.
 - practica5/migraciones/002-referencias.sql: FK compuesta envío/pedido/cliente.
 - practica5/referencias.md: relación y acción referencial por cada FK.
@@ -87,8 +90,8 @@ Las pruebas usan transacciones y ROLLBACK para conservar la fuente sin cambios. 
 
 ## Proyecto asignado
 
-El proyecto asignado es Obra Pública Municipal. Su carga y análisis se mantienen separados del proyecto propio porque el Excel de pedidos no contiene datos de obras públicas. La documentación correspondiente permanece en practica4/proyecto-asignado/ y practica5/integridad-almacen.md.
+El proyecto asignado es Obra Pública Municipal. Su carga y análisis se mantienen separados: el Excel de pedidos no contiene datos de obras públicas. La documentación correspondiente permanece en practica4/proyecto-asignado/ y practica5/integridad-almacen.md.
 
 ## Evidencia y estado
 
-Los archivos SQL y Python quedan preparados para ejecutarse, pero la salida real de PostgreSQL, las capturas y la revisión/fusión del Pull Request deben obtenerse en el entorno del equipo. No se registran como ejecutados pasos que todavía no se han comprobado.
+Los archivos SQL y Python están preparados para ejecutarse. La carga real en PostgreSQL, la segunda ejecución, los tiempos INSERT/COPY, las capturas, la revisión del Pull Request y su fusión deben obtenerse/realizarse en el entorno del equipo. No se registran como ejecutados pasos que todavía no se han comprobado.
