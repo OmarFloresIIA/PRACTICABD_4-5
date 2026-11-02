@@ -1,91 +1,88 @@
 # Ejercicio 1.3. Fuente de datos del proyecto propio
 
-## Decisión
+## Fuente seleccionada
 
-No se encontró un conjunto publicado que represente el caso de la empresa del proyecto: ventas de tres líneas específicas de productos industriales, clientes nacionales y de exportación, sucursales, transportistas, pedidos, detalles y envíos. Por ello se utilizarán datos sintéticos generados mediante un script reproducible. No se presentarán como ventas reales ni se mezclarán registros de otro negocio.
+La fuente principal es el archivo de Excel **base_datos_pedidos.xlsx**, proporcionado por el equipo para esta práctica. Contiene una base de datos sintética de pedidos de una empresa que comercializa tres líneas de productos industriales: OMNIGOLD, HYVOLT y HYPRENE.
 
-## Búsqueda documentada
+El equipo partió de una base de datos relacional de una empresa privada que se utilizó como referencia para comprender el dominio y la estructura de las tablas. Como esa base no podía publicarse ni compartirse, se modificó y abstrajo su estructura para no utilizar los registros privados. Después se explicó a **Claude (Anthropic), como colaborador de IA generativa**, la organización de las entidades, sus atributos, las relaciones y las reglas del dominio. Claude apoyó la generación aleatoria y estructurada de los registros que integran el archivo entregado. El conjunto final es sintético: no debe presentarse como una exportación de ventas reales ni como un conjunto de datos público.
 
-Se revisaron repositorios académicos y conjuntos de datos de comercio y ventas. Entre los términos de búsqueda utilizados se encuentran:
+## Referencia y licencia
 
-- `industrial sales orders dataset customers products shipments transporters public CSV`
-- `manufacturing sales orders dataset freight shipping branches open data`
-- `public industrial equipment sales dataset invoice product quantity unit price customer`
-- `UCI Online Retail II`
-- `online retail transactional dataset invoice customer product country`
+Referencia en formato APA 7 para identificar el archivo de trabajo:
 
-### Candidato revisado y descartado: Online Retail II
+Equipo del proyecto. (2026). *Base de datos sintética de pedidos* [Archivo de datos XLSX no publicado; generación asistida por Claude (Anthropic)].
 
-**Referencia APA 7:**
+No se trata de un conjunto publicado por una institución ni de un dataset con licencia abierta. La estructura de referencia proviene de un caso privado y no se redistribuye. El archivo sintético se utiliza únicamente como material académico del proyecto. La mención de Claude documenta el apoyo de IA en la generación de datos; no implica que Claude sea una fuente estadística externa ni que el archivo tenga una licencia de Anthropic.
 
-Chen, D. (2012). *Online Retail II* [Conjunto de datos]. UCI Machine Learning Repository. https://doi.org/10.24432/C5CG6D
+## Formato, tamaño y contenido
 
-- **Institución:** UCI Machine Learning Repository.
-- **Autor:** Daqing Chen.
-- **Consulta:** 30 de octubre de 2026.
-- **Formato y tamaño:** libro de Excel `online_retail_II.xlsx`, aproximadamente 43.5 MB.
-- **Volumen:** 1,067,371 transacciones.
-- **Periodo:** 1 de diciembre de 2009 a 9 de diciembre de 2011.
-- **Campos:** `InvoiceNo`, `StockCode`, `Description`, `Quantity`, `InvoiceDate`, `UnitPrice`, `CustomerID` y `Country`.
-- **Licencia:** Creative Commons Attribution 4.0 International (CC BY 4.0), que permite compartir y adaptar los datos con atribución.
+- Archivo: base_datos_pedidos.xlsx
+- Formato: Microsoft Excel (XLSX).
+- Tamaño del archivo recibido: 606,594 bytes (aproximadamente 593 KiB).
+- Hojas: siete hojas correspondientes a tablas y una hoja adicional llamada Notas.
+- Registros: 1,500 en cada tabla; 10,500 registros en total.
+- Columnas de las siete tablas: 59 en total.
+- Periodo de pedidos: 2024-01-01 a 2026-09-30.
+- Periodo de envíos: 2024-01-04 a 2026-10-09.
 
-La ficha oficial informa que el conjunto corresponde a una tienda británica en línea que vende artículos de regalo. También advierte que contiene valores faltantes. No se importó porque no representa una empresa fabricante o distribuidora de equipo industrial mexicano: no contiene sucursales, transportistas, guías, costos de flete, RFC, régimen fiscal, ni la clasificación OMNIGOLD/HYVOLT/HYPRENE. Sus precios están expresados en libras esterlinas. Adaptarlo requeriría inventar la mayor parte de las relaciones y atributos del proyecto, por lo que no sería una fuente apropiada para poblar este esquema.
-
-### Correspondencia revisada (no importada)
-
-| Campo de Online Retail II | Posible destino en el esquema propio | Decisión |
-|---|---|---|
-| InvoiceNo | pedido.folio | No se importa: el identificador de factura pertenece a una tienda británica y algunos valores indican cancelación. |
-| StockCode | producto.claveProducto | No se importa: los códigos identifican artículos de regalo, no productos OMNIGOLD, HYVOLT o HYPRENE. |
-| Description | producto | No hay una columna de descripción de producto en el esquema recopilado; no se crea una columna solo para adaptar el conjunto. |
-| Quantity | detalle.cantidad | El significado de cantidad es parecido, pero los renglones corresponden a artículos de regalo y no a productos industriales del proyecto. |
-| InvoiceDate | pedido.dia, pedido.mes, pedido.anio | La fecha podría separarse en componentes, pero pertenece al periodo 2009–2011 y al negocio británico. |
-| UnitPrice | detalle.precioAplicado | No se importa: el importe está en libras esterlinas y no corresponde a la moneda USD del proyecto. |
-| CustomerID | cliente.numeroCliente | El identificador de cliente no aporta RFC, régimen fiscal ni la clasificación nacional/exportación requerida. |
-| Country | cliente.paisReceptor | El país podría mapearse parcialmente, pero no permite reconstruir los demás datos fiscales y comerciales del cliente. |
-
-La correspondencia muestra que algunos campos tienen nombres o significados cercanos, pero no existe una correspondencia suficiente para poblar las tablas sin inventar información. Por eso todos los campos del candidato quedan fuera de la carga del proyecto propio.
-
-**Fuente consultada:** UCI Machine Learning Repository, ficha oficial de [Online Retail II](https://archive.ics.uci.edu/dataset/502/online+retail+ii).
-
-También se revisó el conjunto *Online Retail*, con 541,909 registros y seis campos de negocio equivalentes, pero presenta el mismo problema de dominio: comercio minorista británico de regalos, no ventas industriales con transporte y sucursales. Se descartó por la misma razón.
-
-### Calidad observada en el candidato descartado
-
-La ficha oficial de Online Retail II indica que existen valores faltantes y que el prefijo `C` en `InvoiceNo` identifica cancelaciones. Como no se descargó ni se incorporó el archivo, no se modificó ninguna fila ni se afirma haber contado cuántos registros tienen cada problema. Si se hubiera elegido ese conjunto, antes de cargarlo habría que revisar los identificadores de cliente faltantes, separar las cancelaciones, revisar cantidades negativas y validar que fechas y precios pudieran convertirse al dominio de destino. No se aplicó esa limpieza porque el conjunto se descartó por no representar el caso industrial.
-
-## Datos que se generarán
-
-El script `poblar/poblar.py` genera registros ficticios con semilla fija. Las tablas principales tendrán como mínimo 200 filas:
-
-| Tabla | Registros planeados | Relación principal |
+| Hoja / tabla | Registros | Columnas |
 |---|---:|---|
-| cliente | 200 | Clientes nacionales y de exportación. |
-| transportista | 220 | Transportistas nacionales, internacionales o de ambas modalidades. |
-| producto | 240 | Productos repartidos entre las tres líneas. |
-| sucursal | 240 | Una o más sucursales por cliente. |
-| pedido | 600 | Pedidos asociados a clientes. |
-| detalle | 1,200 | Dos renglones por pedido, asociados a productos. |
-| envio | 300 | Envíos asociados a pedidos, transportistas y sucursales del mismo cliente. |
+| cliente | 1,500 | numeroCliente, razonSocial, correoCliente, telefonoCliente, tipoCliente, RFC, regimenFiscal, estadoOrigen, idFiscalGlobal, paisReceptor |
+| transportista | 1,500 | claveTransportista, nombreEmpresa, telefonoAtencion, email, esNacional, esInternacional, RFC, codigoAduanal, agenciaAduanal |
+| producto | 1,500 | claveProducto, modeloProducto, costoUnitarioUSD, precioUnitarioUSD, tipoProducto, provMaquinaria, provTransformador, provTransporte |
+| sucursal | 1,500 | numeroCliente, claveSucursal, nombrePlanta, telefonoEncargado, calle, numero, ciudad, estado, pais, CP |
+| pedido | 1,500 | folio, numeroCliente, estatus, dia, mes, anio, activo |
+| detalle | 1,500 | folio, claveParcial, claveProducto, costoProduccion, precioAplicado, cantidad |
+| envio | 1,500 | numeroGuia, folio, claveTransportista, numeroCliente, claveSucursal, costoFlete, dia, mes, anio |
+| Notas | 10 filas de metadatos | Descripción de la generación y decisiones usadas para preparar las hojas; no se carga como tabla relacional. |
 
-Los identificadores, nombres, correos del dominio reservado `.test`, RFC de demostración y teléfonos serán ficticios. La semilla permite repetir los mismos datos en cada ejecución. La carga utiliza `COPY` hacia tablas temporales y después inserta en las tablas definitivas en orden de dependencia.
+## Correspondencia entre la fuente y el esquema
 
-## Calidad y limpieza
+La correspondencia es directa: las siete hojas de datos corresponden a las siete tablas relacionales y cada columna se carga en la columna homónima, normalizando los nombres a minúsculas porque PostgreSQL convierte los identificadores no delimitados a minúsculas. No se descartan campos de las siete hojas. La hoja Notas se conserva como documentación y no se importa.
 
-Como no se importará el conjunto UCI, no hay filas externas que limpiar. El generador evita desde el origen:
+| Hoja | Tabla destino | Correspondencia |
+|---|---|---|
+| cliente | cliente | Las diez columnas pasan a sus atributos homónimos. |
+| transportista | transportista | Las nueve columnas pasan a sus atributos homónimos. |
+| producto | producto | Las ocho columnas pasan a sus atributos homónimos; modeloProducto se incorporó mediante migración. |
+| sucursal | sucursal | Las diez columnas pasan a sus atributos homónimos. |
+| pedido | pedido | Las siete columnas pasan a sus atributos homónimos; activo se incorpora mediante migración. |
+| detalle | detalle | Las seis columnas pasan a sus atributos homónimos. |
+| envio | envio | Las nueve columnas pasan a sus atributos homónimos. |
+| Notas | No se carga | Explica reglas de generación, campos opcionales y supuestos del conjunto. |
 
-- identificadores repetidos;
-- correos duplicados;
-- clientes sin datos de contacto obligatorios;
-- combinaciones de atributos fiscales incompatibles con el tipo de cliente;
-- transportistas sin modalidad válida;
-- productos sin proveedor correspondiente a su línea;
-- cantidades e importes negativos;
-- fechas inexistentes;
-- envíos que apuntan a una sucursal de otro cliente.
+## Revisión de calidad y decisiones
 
-Si el gestor rechaza una fila por una restricción, la carga completa se revierte y el error debe revisarse antes de volver a ejecutarla.
+La revisión se realizó sobre los 10,500 registros del archivo recibido. Los siguientes resultados describen esta versión concreta del Excel:
 
-## Licencia y uso
+| Revisión | Resultado observado | Decisión |
+|---|---|---|
+| Claves identificadoras | No se encontraron duplicados en numeroCliente, claveTransportista, claveProducto, folio ni numeroGuia. Tampoco en las claves compuestas de sucursal y detalle. | Se conservan como PK simples o compuestas según el esquema. |
+| Correos de cliente | 1,500 valores no nulos y distintos. | NOT NULL y UNIQUE. |
+| RFC de cliente | 1,065 valores no nulos y distintos; 435 nulos corresponden a EXPORTACION. | Se conserva como opcional y se valida el formato cuando existe. |
+| Identificador fiscal global | 435 valores no nulos; los 1,065 nulos corresponden a NACIONAL. | Se conserva como atributo opcional con UNIQUE. |
+| Teléfonos | Los 1,500 clientes tienen teléfono; hay 199 teléfonos nulos en transportista y 321 en sucursal. | NOT NULL solo para cliente; en transportista y sucursal se permiten nulos. |
+| Correos de transportista | 1,282 no nulos, sin duplicados; 218 nulos. | Se permite NULL y se valida formato cuando existe. |
+| RFC de transportista | 1,117 no nulos y 383 nulos; los nulos corresponden a transportistas sin modalidad nacional. | Se valida el formato cuando existe y se conserva la regla de modalidad nacional. |
+| Datos aduanales | 774 transportistas tienen modalidad internacional; sus campos aduanales están presentes. | Se conserva la regla de que código y agencia aduanal son obligatorios para esa modalidad. |
+| Proveedor de producto | Solo se llena el campo de proveedor de la línea correspondiente: maquinaria, transformador o transporte. | Se conserva el CHECK del subtipo de producto. |
+| Modelo y línea de producto | Hay diez modelos. HYGOLD se asignó a OMNIGOLD según las notas de la fuente. | Se incorpora modeloProducto y se restringe la combinación modelo/tipo. |
+| Código postal | Los 1,500 valores son textos de cinco dígitos. Hay seis repeticiones legítimas. | Se valida el formato, pero no se declara UNIQUE. |
+| Valores de pedido | 925 ENTREGADO, 575 ENVIADO; 1,420 activos y 80 inactivos. | CHECK con los dos estados observados; activo se conserva y tiene DEFAULT TRUE. |
+| Fechas | Todas las fechas de pedido y envío forman fechas válidas. Los 1,500 envíos son posteriores a la fecha de su pedido. | Se valida el calendario con make_date y se documenta la relación temporal comprobada. |
+| Claves foráneas | No se encontraron referencias huérfanas en las relaciones revisadas. Los 1,500 envíos apuntan al mismo cliente del pedido y a una sucursal de ese cliente. | Se declaran las FKs y una FK compuesta adicional en la migración 002. |
+| Importes de catálogo | Los 1,500 productos tienen precioUnitarioUSD mayor o igual que costoUnitarioUSD. | Se conserva el CHECK en producto. |
+| Importe aplicado | Tres detalles tienen precioAplicado menor que costoProduccion. Los 1,500 precios aplicados son distintos del precio de catálogo. | No se impone CHECK precioAplicado >= costoProduccion: la fuente contiene tres excepciones y el atributo representa el precio aplicado a la venta. Los datos no se alteran de forma silenciosa. |
+| Cantidades y fletes | Cantidad va de 1 a 500; costoFlete es positivo. | Se mantienen CHECK de cantidad positiva y flete no negativo. |
 
-Los registros sintéticos fueron creados para esta práctica y no reproducen datos personales ni transacciones de una empresa real. La ficha UCI se cita como fuente revisada y descartada; sus datos no se copian al repositorio.
+Los NULL del archivo no se consideran errores automáticamente: representan atributos que no aplican a un subtipo de cliente o transportista, o datos opcionales de contacto. Los seis códigos postales repetidos no son duplicados de sucursal porque la clave de sucursal es numeroCliente + claveSucursal.
+
+## Carga automatizada
+
+El archivo fuente debe colocarse en:
+
+    practica4/datos/base_datos_pedidos.xlsx
+
+El programa practica4/poblar/poblar.py lee el libro, verifica las hojas y encabezados, y carga las tablas en orden de dependencia mediante COPY. La carga usa DATABASE_URL, que debe conectarse con usuario_app. Es transaccional: si una restricción rechaza una fila, no se confirma ninguna tabla. Una segunda ejecución no duplica registros y reporta cuántos ya existían.
+
+El archivo fuente es necesario para ejecutar el script; no se debe reemplazar por una población aleatoria diferente. Las salidas reales del gestor y la comparación de tiempo COPY/INSERT se agregan después de ejecutar los programas en el equipo local.
