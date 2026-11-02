@@ -7,67 +7,88 @@
 Grupo: 3BV1. Gestor del proyecto propio: PostgreSQL 17.
 
 ## Proyecto propio
-El proyecto representa las ventas y los envíos de tres líneas de productos industriales: OMNIGOLD, HYVOLT y HYPRENE. **Todos los registros generados para esta práctica son sintéticos; no son ventas reales ni datos personales reales.**
 
-### Preparación del entorno (Windows / PowerShell)
+El proyecto representa ventas y envíos de tres líneas industriales: OMNIGOLD, HYVOLT y HYPRENE. La población principal proviene del archivo sintético base_datos_pedidos.xlsx, elaborado a partir de una estructura relacional modificada y abstraída de una base privada. El equipo describió esa estructura a Claude (Anthropic), que colaboró en la generación aleatoria y estructurada de los registros.
 
-1. Entra a esta carpeta (`Estructura-principal`).
-2. Copia `.env.example` como `.env` y cambia la contraseña local.
+Los registros del Excel son sintéticos; no son ventas reales ni deben presentarse como datos de la empresa privada. La documentación de procedencia, campos, nulos y calidad está en practica4/fuente.md.
+
+### Preparar el entorno (Windows / PowerShell)
+
+1. Entra a esta carpeta, Estructura-principal.
+2. Copia .env.example como .env y cambia la contraseña del administrador local.
 3. Inicia PostgreSQL:
 
-```powershell
-Copy-Item .env.example .env
-# Edita .env y cambia POSTGRES_PASSWORD
-docker compose up -d
-```
+    Copy-Item .env.example .env
+    # Edita .env y cambia POSTGRES_PASSWORD
+    docker compose up -d
 
-El esquema base se crea al inicializar el volumen por primera vez. Si ya existía un volumen anterior y necesitas recrearlo, ten presente que `docker compose down -v` elimina los datos locales de ese volumen.
+El esquema base se crea al inicializar el volumen por primera vez. Si ya existía un volumen y necesitas reiniciar desde cero, ten presente que docker compose down -v elimina los datos locales de ese volumen.
+
+### Colocar el archivo fuente
+
+Copia el archivo base_datos_pedidos.xlsx en:
+
+    practica4/datos/base_datos_pedidos.xlsx
+
+El archivo se puede obtener del chat donde se entregó. La carpeta practica4/datos/README.md explica las hojas que espera el programa. El binario no se incluye en este commit y no se debe sustituir por una generación aleatoria distinta.
 
 ### Aplicar dominios y restricciones
 
-```powershell
-docker compose cp .\practica4\migraciones\001-dominios.sql db:/tmp/001-dominios.sql
-docker compose exec -T db psql -U postgres -d ventas_industriales -v ON_ERROR_STOP=1 -f /tmp/001-dominios.sql
-```
+    docker compose cp .\practica4\migraciones\001-dominios.sql db:/tmp/001-dominios.sql
+    docker compose exec -T db psql -U postgres -d ventas_industriales -v ON_ERROR_STOP=1 -f /tmp/001-dominios.sql
+
+### Aplicar integridad referencial compuesta
+
+    docker compose cp .\practica5\migraciones\002-referencias.sql db:/tmp/002-referencias.sql
+    docker compose exec -T db psql -U postgres -d ventas_industriales -v ON_ERROR_STOP=1 -f /tmp/002-referencias.sql
 
 ### Crear roles y usuarios
 
-Sigue las instrucciones de `practica4/permisos.md`. Las contraseñas se definen como variables de entorno y se pasan a `psql`; no se guardan en el repositorio.
+Sigue practica4/permisos.md. El usuario de carga es usuario_app. Las contraseñas se definen en el entorno local y no se guardan en SQL, Python, Compose ni Git.
 
 ### Instalar y ejecutar la carga
 
-```powershell
-py -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r .\practica4\poblar\requirements.txt
-$env:DATABASE_URL = "postgresql://usuario_app:TU_CLAVE@localhost:5434/ventas_industriales"
-py .\practica4\poblar\poblar.py
-py .\practica4\poblar\comparar-copy-insert.py
-```
+    py -m venv .venv
+    .\.venv\Scripts\Activate.ps1
+    pip install -r .\practica4\poblar\requirements.txt
+    $env:DATABASE_URL = "postgresql://usuario_app:TU_CLAVE@localhost:5434/ventas_industriales"
+    py .\practica4\poblar\poblar.py
+    py .\practica4\poblar\comparar-copy-insert.py
 
-El segundo comando compara el tiempo de INSERT individual y COPY sobre 3,000 filas temporales; registra los tiempos reales de tu equipo.
+El script lee las siete hojas relacionales, valida encabezados y carga las tablas en orden de dependencia mediante COPY. Usa DATABASE_URL con el rol usuario_app, no con el administrador. La transacción es de todo o nada: si una fila incumple una restricción, se ejecuta ROLLBACK. El programa informa filas leídas, insertadas y ya existentes; una segunda ejecución no duplica registros. La comparación INSERT/COPY mide los 1,500 pedidos de la misma fuente y reporta los tiempos reales de tu equipo.
 
-El usuario `usuario_app` se crea mediante el script de permisos. No se guardan contraseñas en los archivos del repositorio. La carga usa `COPY` hacia tablas temporales, inserta en orden de dependencia y confirma todo al final. Si una fila falla, la transacción completa se revierte. Al ejecutarla otra vez, las restricciones UNIQUE/PK y `ON CONFLICT DO NOTHING` evitan duplicados; el reporte muestra filas insertadas y ya existentes.
+### Ejecutar pruebas
 
-## Archivos de la práctica
+    docker compose cp .\practica4\pruebas-dominio.sql db:/tmp/pruebas-dominio.sql
+    docker compose exec -T db psql -U postgres -d ventas_industriales -v ON_ERROR_STOP=1 -f /tmp/pruebas-dominio.sql
 
-- `esquema.sql`: esquema relacional base recopilado de la Práctica 3.
-- `practica4/dominios.md`: tipos de dato y reglas del dominio.
-- `practica4/fuente.md`: búsqueda de datos públicos y justificación de datos sintéticos.
-- `practica4/proyecto-asignado/`: fuente, cifras y procedimiento de carga del proyecto asignado.
-- `practica4/migraciones/001-dominios.sql`: restricciones adicionales.
-- `practica4/poblar/poblar.py`: carga repetible con COPY.
-- `practica4/poblar/comparar-copy-insert.py`: comparación de tiempo INSERT/COPY.
-- `practica4/pruebas-dominio.md` y `practica4/pruebas-dominio.sql`: pruebas de restricciones.
-- `practica4/permisos.md` y `practica4/permisos.sql`: roles y privilegios.
-- `practica5/`: claves foráneas, acciones referenciales, DML y transacciones.
-- `practica5/pruebas-referenciales.md`: pruebas de CASCADE, RESTRICT, actualización y orden de carga.
-- `practica5/integrantes/`: migraciones y pruebas individuales; la propuesta de Brenda está pendiente de confirmación.
-- `practica5/sql/002-restricciones-almacen.sql`: tres restricciones de dominio para probar en una copia del almacén asignado.
-- `evidencias/`: capturas auténticas de ejecución, pendientes de obtener en el equipo local.
+    docker compose cp .\practica5\pruebas-referenciales.sql db:/tmp/pruebas-referenciales.sql
+    docker compose exec -T db psql -U postgres -d ventas_industriales -v ON_ERROR_STOP=1 -f /tmp/pruebas-referenciales.sql
+
+Las pruebas usan transacciones y ROLLBACK para conservar la fuente sin cambios. Sigue los archivos MD para interpretar cada caso y capturar la salida real del gestor.
+
+## Archivos principales
+
+- esquema.sql: esquema relacional base de la Práctica 3.
+- practica4/dominios.md: tipos, longitudes y restricciones.
+- practica4/fuente.md: procedencia, correspondencia y calidad del Excel sintético.
+- practica4/datos/: ubicación local del archivo fuente.
+- practica4/migraciones/001-dominios.sql: dominios y restricciones del proyecto propio.
+- practica4/poblar/poblar.py: carga desde Excel mediante COPY.
+- practica4/poblar/comparar-copy-insert.py: benchmark de los 1,500 pedidos.
+- practica4/pruebas-dominio.md y .sql: casos de restricciones.
+- practica4/permisos.md y .sql: roles y privilegios.
+- practica5/migraciones/002-referencias.sql: FK compuesta envío/pedido/cliente.
+- practica5/referencias.md: relación y acción referencial por cada FK.
+- practica5/pruebas-referenciales.md y .sql: integridad referencial.
+- practica5/edicion-de-valores.md y sql/edicion-de-valores.sql: DML y transacciones.
+- practica4/proyecto-asignado/ y practica5/integridad-almacen.md: proyecto asignado de obra pública municipal.
+- evidencias/: capturas auténticas pendientes de obtener en el entorno local.
 
 ## Proyecto asignado
-El proyecto asignado es Obra Pública Municipal. La carga debe respetar el esquema del fork y los datos sintéticos declarados en el artículo. La documentación correspondiente está en `practica4/proyecto-asignado/` y `practica5/integridad-almacen.md`.
 
-## Evidencia
-Los archivos SQL y Python quedan preparados para ejecutarse, pero la salida real de PostgreSQL, las capturas y la revisión del Pull Request deben obtenerse en el entorno del equipo. No se registran como ejecutados pasos que todavía no se han comprobado.
+El proyecto asignado es Obra Pública Municipal. Su carga y análisis se mantienen separados del proyecto propio porque el Excel de pedidos no contiene datos de obras públicas. La documentación correspondiente permanece en practica4/proyecto-asignado/ y practica5/integridad-almacen.md.
+
+## Evidencia y estado
+
+Los archivos SQL y Python quedan preparados para ejecutarse, pero la salida real de PostgreSQL, las capturas y la revisión/fusión del Pull Request deben obtenerse en el entorno del equipo. No se registran como ejecutados pasos que todavía no se han comprobado.
