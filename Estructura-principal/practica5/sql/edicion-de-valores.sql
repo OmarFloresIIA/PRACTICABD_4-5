@@ -1,10 +1,8 @@
 -- Ejercicio 2.4. Edición de valores y transacciones.
 -- Ejecutar con psql después de aplicar las migraciones y cargar el Excel.
--- El bloque de ejemplos y DELETE se revierte para no alterar la fuente.
--- El ejemplo SAVEPOINT sí se confirma y después se limpia; al final se
--- demuestra una transacción fallida y su ROLLBACK.
+-- Las primeras pruebas y el DELETE se revierten para conservar la fuente.
 
--- 1. INSERT desde una consulta y manejo del caso duplicado.
+-- 1. INSERT desde consulta y manejo de un renglón que ya existe.
 BEGIN;
 
 INSERT INTO sucursal
@@ -16,9 +14,8 @@ ORDER BY numerocliente,clavesucursal
 LIMIT 1
 ON CONFLICT (numerocliente,clavesucursal) DO NOTHING;
 
--- Ejecutar la misma inserción de nuevo: no duplica el renglón.
-INSERT INTO sucursal
- (numerocliente,clavesucursal,nombreplanta)
+-- Se repite la misma operación; la clave compuesta evita duplicados.
+INSERT INTO sucursal (numerocliente,clavesucursal,nombreplanta)
 SELECT numerocliente,'S-DEM-01','Sucursal de demostración'
 FROM sucursal
 ORDER BY numerocliente,clavesucursal
@@ -28,8 +25,7 @@ ON CONFLICT (numerocliente,clavesucursal) DO NOTHING;
 SELECT COUNT(*) AS sucursales_demostracion
 FROM sucursal WHERE clavesucursal='S-DEM-01';
 
--- 2. UPDATE que depende de otra tabla: precio aplicado toma el precio
--- del producto relacionado. Se actualiza un solo renglón de detalle.
+-- 2. UPDATE basado en producto: toma el precio de catálogo para un detalle.
 UPDATE detalle d
 SET precioaplicado=p.preciounitariousd
 FROM producto p
@@ -40,25 +36,28 @@ WHERE p.claveproducto=d.claveproducto
   )
 RETURNING d.folio,d.claveparcial,d.precioaplicado;
 
--- UPDATE con CASE: clasifica un pedido a partir de si ya tiene envío.
--- La fuente solo contempla ENVIADO y ENTREGADO.
+-- UPDATE con CASE según exista un envío relacionado.
+-- Se conserva ENVIADO si el pedido continúa en esa etapa; con envío y
+-- cualquier otro estado no cancelado se clasifica como ENTREGADO.
 UPDATE pedido p
 SET estatus=CASE
+    WHEN p.estatus='CANCELADO' THEN 'CANCELADO'
     WHEN EXISTS (SELECT 1 FROM envio e WHERE e.folio=p.folio)
-      THEN 'ENVIADO'
-    ELSE 'ENTREGADO'
+         AND p.estatus='ENVIADO' THEN 'ENVIADO'
+    WHEN EXISTS (SELECT 1 FROM envio e WHERE e.folio=p.folio)
+      THEN 'ENTREGADO'
+    ELSE 'EN PROCESO'
 END
 WHERE p.folio=(SELECT MIN(folio) FROM pedido)
 RETURNING p.folio,p.estatus;
 
--- Borrado lógico: conserva el pedido y sus detalles, pero cambia activo.
+-- Borrado lógico: cambia activo, pero conserva el pedido y sus detalles.
 UPDATE pedido
 SET activo=FALSE
 WHERE folio=(SELECT MIN(folio) FROM pedido WHERE activo=TRUE)
-RETURNING folio,activo;
+RETURNING folio,estatus,activo;
 
--- 3. DELETE con subconsulta sobre un pedido de demostración.
--- Primero se crea pedido/detalle/envío de prueba con claves válidas.
+-- 3. DELETE con subconsulta sobre un pedido temporal.
 INSERT INTO pedido (folio,numerocliente,estatus,dia,mes,anio)
 SELECT 99200010,c.numerocliente,'ENVIADO',10,10,2026
 FROM cliente c
@@ -70,30 +69,37 @@ SELECT 99200010,1,claveproducto,costounitariousd,preciounitariousd,2
 FROM producto
 ORDER BY claveproducto LIMIT 1;
 
+-- Se crea el envío usando un transportista compatible con el tipo de cliente
+-- y una sucursal perteneciente al mismo cliente.
 INSERT INTO envio
  (numeroguia,folio,clavetransportista,numerocliente,clavesucursal,costoflete,dia,mes,anio)
-SELECT 'GUIA-99200010',p.folio,
-       (SELECT clavetransportista FROM transportista ORDER BY clavetransportista LIMIT 1),
-       p.numerocliente,s.clavesucursal,800.00,12,10,2026
+SELECT 'GUIA-99200010',p.folio,t.clavetransportista,p.numerocliente,
+       s.clavesucursal,800.00,12,10,2026
 FROM pedido p
-JOIN sucursal s ON s.numerocliente=p.numerocliente
+JOIN cliente c ON c.numerocliente=p.numerocliente
+JOIN sucursal s ON s.numerocliente=c.numerocliente
+JOIN transportista t
+  ON (c.tipocliente='NACIONAL' AND t.esnacional)
+  OR (c.tipocliente='EXPORTACION' AND t.esinternacional)
 WHERE p.folio=99200010
-ORDER BY s.clavesucursal
+ORDER BY t.clavetransportista,s.clavesucursal
 LIMIT 1;
 
--- Se elimina el envío porque su FK hacia pedido es RESTRICT.
+-- Se elimina primero el envío porque envio -> pedido es RESTRICT.
 DELETE FROM envio
 WHERE folio IN (
-    SELECT p.folio FROM pedido p
+    SELECT p.folio
+    FROM pedido p
     WHERE p.folio=99200010
       AND EXISTS (SELECT 1 FROM detalle d WHERE d.folio=p.folio)
 );
 
--- DELETE usa una subconsulta correlacionada. Por CASCADE se eliminan
--- los renglones detalle asociados con el pedido.
+-- El pedido se elimina mediante una subconsulta sobre detalle.
+-- detalle -> pedido usa CASCADE, por eso se elimina también el renglón hijo.
 DELETE FROM pedido p
 WHERE p.folio IN (
-    SELECT d.folio FROM detalle d
+    SELECT d.folio
+    FROM detalle d
     WHERE d.folio=p.folio
 )
 AND p.folio=99200010;
@@ -103,17 +109,15 @@ SELECT
   (SELECT COUNT(*) FROM detalle WHERE folio=99200010) AS detalles_restantes,
   (SELECT COUNT(*) FROM envio WHERE folio=99200010) AS envios_restantes;
 
--- La sucursal de demostración, la edición de precio, la clasificación y
--- el borrado lógico son ejemplos temporales; se recupera el Excel original.
+-- Se recupera la fuente original, incluidos los cambios de sucursal,
+-- precio, estado y activo de esta primera parte.
 ROLLBACK;
 
--- 4. Transacción de dos tablas con SAVEPOINT, reversión parcial y COMMIT.
--- Se confirma pedido y detalle, se revierte solo el envío creado después
--- del SAVEPOINT, se verifica y se limpia la demostración.
+-- 4. Transacción de varias tablas con SAVEPOINT, reversión parcial y COMMIT.
 BEGIN;
 
 INSERT INTO pedido (folio,numerocliente,estatus,dia,mes,anio)
-SELECT 99200011,c.numerocliente,'ENVIADO',15,10,2026
+SELECT 99200011,c.numerocliente,'EN PROCESO',15,10,2026
 FROM cliente c
 WHERE c.numerocliente=(SELECT MIN(numerocliente) FROM cliente);
 
@@ -127,37 +131,51 @@ SAVEPOINT antes_del_envio;
 
 INSERT INTO envio
  (numeroguia,folio,clavetransportista,numerocliente,clavesucursal,costoflete,dia,mes,anio)
-SELECT 'GUIA-99200011',p.folio,
-       (SELECT clavetransportista FROM transportista ORDER BY clavetransportista LIMIT 1),
-       p.numerocliente,s.clavesucursal,850.00,17,10,2026
+SELECT 'GUIA-99200011',p.folio,t.clavetransportista,p.numerocliente,
+       s.clavesucursal,850.00,17,10,2026
 FROM pedido p
-JOIN sucursal s ON s.numerocliente=p.numerocliente
+JOIN cliente c ON c.numerocliente=p.numerocliente
+JOIN sucursal s ON s.numerocliente=c.numerocliente
+JOIN transportista t
+  ON (c.tipocliente='NACIONAL' AND t.esnacional)
+  OR (c.tipocliente='EXPORTACION' AND t.esinternacional)
 WHERE p.folio=99200011
-ORDER BY s.clavesucursal
+ORDER BY t.clavetransportista,s.clavesucursal
 LIMIT 1;
 
+-- Clasificación temporal posterior a la creación del envío.
+UPDATE pedido p
+SET estatus=CASE
+    WHEN EXISTS (SELECT 1 FROM envio e WHERE e.folio=p.folio)
+      THEN 'ENTREGADO'
+    ELSE 'EN PROCESO'
+END
+WHERE p.folio=99200011;
+
+-- La reversión parcial deshace el envío y el cambio de estatus,
+-- pero conserva el pedido y el detalle.
 ROLLBACK TO SAVEPOINT antes_del_envio;
 
 SELECT
   (SELECT COUNT(*) FROM pedido WHERE folio=99200011) AS pedido_conservado,
   (SELECT COUNT(*) FROM detalle WHERE folio=99200011) AS detalle_conservado,
-  (SELECT COUNT(*) FROM envio WHERE folio=99200011) AS envio_revertido;
+  (SELECT COUNT(*) FROM envio WHERE folio=99200011) AS envio_revertido,
+  (SELECT estatus FROM pedido WHERE folio=99200011) AS estatus_restaurado;
 
 COMMIT;
 
--- Eliminar la demostración confirmada; detalle se elimina por CASCADE.
+-- Limpieza de la demostración confirmada; detalle se elimina por CASCADE.
 BEGIN;
 DELETE FROM pedido WHERE folio=99200011;
 COMMIT;
 
--- 5. Fallo a mitad de la transacción por FK inexistente.
--- La primera inserción sí se ejecuta dentro de la transacción; la segunda
--- falla por producto inexistente y ROLLBACK revierte también el pedido.
+-- 5. Fallo a mitad de transacción por una FK inexistente.
+-- El segundo INSERT falla; ROLLBACK también revierte el pedido inicial.
 \set ON_ERROR_STOP off
 BEGIN;
 
 INSERT INTO pedido (folio,numerocliente,estatus,dia,mes,anio)
-SELECT 99200012,MIN(numerocliente),'ENVIADO',20,10,2026
+SELECT 99200012,MIN(numerocliente),'REGISTRADO',20,10,2026
 FROM cliente;
 
 INSERT INTO detalle

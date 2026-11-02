@@ -3,17 +3,15 @@
 -- Motor: PostgreSQL 17.
 BEGIN;
 
--- El esquema base ya contempla VARCHAR(15), suficiente para EXPORTACION.
 ALTER TABLE cliente ALTER COLUMN tipocliente TYPE VARCHAR(15);
 
--- Dominios compartidos: mismo formato para los atributos de contacto.
 CREATE DOMAIN correo_electronico AS VARCHAR(100)
   CHECK (VALUE ~* '^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$');
 
 CREATE DOMAIN telefono_contacto AS VARCHAR(20)
   CHECK (VALUE ~ '^\+?[0-9][0-9 ()-]{7,18}$');
 
--- En el archivo fuente los 1,500 clientes tienen correo y teléfono.
+-- Los 80 clientes del Excel tienen correo y teléfono.
 ALTER TABLE cliente ALTER COLUMN correocliente SET NOT NULL;
 ALTER TABLE cliente ALTER COLUMN telefonocliente SET NOT NULL;
 
@@ -44,6 +42,9 @@ ALTER TABLE transportista
   ADD CONSTRAINT uq_transportista_email UNIQUE (email);
 
 ALTER TABLE transportista
+  ADD CONSTRAINT uq_transportista_rfc UNIQUE (rfc);
+
+ALTER TABLE transportista
   ADD CONSTRAINT ck_transportista_rfc_formato
   CHECK (rfc IS NULL OR rfc ~ '^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$');
 
@@ -51,8 +52,8 @@ ALTER TABLE sucursal
   ADD CONSTRAINT ck_sucursal_cp_formato
   CHECK (cp IS NULL OR cp ~ '^[0-9]{5}$');
 
--- El archivo incluye un modelo comercial adicional que no estaba en el DDL
--- inicial. HYGOLD se asigna a OMNIGOLD según la nota del propio conjunto.
+-- La fuente agrega modeloProducto. HYGOLD se clasifica como OMNIGOLD
+-- conforme a la nota de generación del propio Excel.
 ALTER TABLE producto
   ADD COLUMN modeloproducto VARCHAR(30) NOT NULL;
 
@@ -74,28 +75,26 @@ ALTER TABLE producto
 ALTER TABLE producto
   ADD CONSTRAINT ck_producto_modelo_tipo
   CHECK (
-    (modeloproducto LIKE 'HYGOLD%' OR modeloproducto LIKE 'OMNIGOLD%')
-      AND tipoproducto = 'OMNIGOLD'
-    OR modeloproducto LIKE 'HYVOLT%' AND tipoproducto = 'HYVOLT'
-    OR modeloproducto LIKE 'HYPRENE%' AND tipoproducto = 'HYPRENE'
+    ((modeloproducto LIKE 'HYGOLD%' OR modeloproducto LIKE 'OMNIGOLD%')
+      AND tipoproducto = 'OMNIGOLD')
+    OR (modeloproducto LIKE 'HYVOLT%' AND tipoproducto = 'HYVOLT')
+    OR (modeloproducto LIKE 'HYPRENE%' AND tipoproducto = 'HYPRENE')
   );
 
--- Todos los precios de catálogo de la fuente son mayores o iguales al costo.
 ALTER TABLE producto
   ADD CONSTRAINT ck_producto_precio_cubre_costo
   CHECK (preciounitariousd >= costounitariousd);
 
--- La fuente tiene dos estatus: ENVIADO y ENTREGADO. No se inventa un estatus
--- por omisión; activo sí tiene un valor inicial natural.
+-- La fuente agrega activo y el diccionario admite los cinco estatus.
 ALTER TABLE pedido
   ADD COLUMN activo BOOLEAN NOT NULL DEFAULT TRUE;
 
 ALTER TABLE pedido
-  ALTER COLUMN estatus DROP DEFAULT;
+  ALTER COLUMN estatus SET DEFAULT 'REGISTRADO';
 
 ALTER TABLE pedido
   ADD CONSTRAINT ck_pedido_estatus
-  CHECK (estatus IN ('ENVIADO', 'ENTREGADO'));
+  CHECK (estatus IN ('REGISTRADO', 'EN PROCESO', 'ENVIADO', 'ENTREGADO', 'CANCELADO'));
 
 ALTER TABLE pedido
   ADD CONSTRAINT ck_pedido_fecha_valida
@@ -108,5 +107,9 @@ ALTER TABLE envio
 ALTER TABLE detalle
   ADD CONSTRAINT ck_detalle_clave_parcial_positiva
   CHECK (claveparcial > 0);
+
+ALTER TABLE detalle
+  ADD CONSTRAINT ck_detalle_precio_cubre_costo
+  CHECK (precioaplicado >= costoproduccion);
 
 COMMIT;
