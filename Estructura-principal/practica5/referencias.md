@@ -19,7 +19,7 @@ El esquema del proyecto propio declara siete relaciones referenciales. Todas las
 - DETALLE se identifica con (folio, claveParcial), por lo que cada renglón pertenece a un pedido.
 - ENVIO referencia la sucursal destino mediante (numeroCliente, claveSucursal).
 - envio.folio también es UNIQUE: el diseño contempla como máximo un envío por pedido.
-- La migración migraciones/002-referencias.sql agrega UNIQUE (pedido.folio, pedido.numeroCliente) y sustituye la FK simple de envío por una FK compuesta (folio, numeroCliente). Los 1,500 registros del Excel cumplen esta condición: el cliente asociado al envío coincide con el del pedido.
+- La migración migraciones/002-referencias.sql agrega UNIQUE (pedido.folio, pedido.numeroCliente) y sustituye la FK simple de envío por una FK compuesta (folio, numeroCliente). Los 452 registros de envio del Excel cumplen esta condición: el cliente asociado al envío coincide con el del pedido. La base revisada contiene 80 clientes, 30 transportistas, 40 productos, 100 sucursales, 500 pedidos, 1,500 detalles y 452 envíos.
 
 ## Acciones referenciales elegidas
 
