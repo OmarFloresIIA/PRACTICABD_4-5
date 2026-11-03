@@ -11,6 +11,7 @@ from pathlib import Path
 import psycopg2
 from dotenv import load_dotenv
 from openpyxl import load_workbook
+from psycopg2.extensions import make_dsn
 
 ROOT = Path(__file__).resolve().parents[2]
 ARCHIVO = ROOT / "practica4" / "datos" / "base_datos_pedidos2.xlsx"
@@ -18,9 +19,22 @@ ARCHIVO = ROOT / "practica4" / "datos" / "base_datos_pedidos2.xlsx"
 def obtener_dsn() -> str:
     load_dotenv(ROOT / ".env")
     dsn = os.getenv("DATABASE_URL")
-    if not dsn:
-        raise RuntimeError("Define DATABASE_URL con usuario_app.")
-    return dsn
+    if dsn:
+        return dsn
+
+    password = os.getenv("APP_DB_PASSWORD")
+    if not password:
+        raise RuntimeError(
+            "Define APP_DB_PASSWORD o DATABASE_URL. "
+            "El usuario predeterminado es usuario_app."
+        )
+    return make_dsn(
+        dbname=os.getenv("POSTGRES_DB", "ventas_industriales"),
+        user=os.getenv("APP_DB_USER", "usuario_app"),
+        password=password,
+        host=os.getenv("DB_HOST", "localhost"),
+        port=os.getenv("DB_PORT", "5434"),
+    )
 
 def leer_detalles():
     if not ARCHIVO.is_file():
