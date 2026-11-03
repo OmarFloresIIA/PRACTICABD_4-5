@@ -8,7 +8,16 @@ Se crean tres roles de grupo sin inicio de sesión y un usuario para cada uno:
 - **rol_consulta / usuario_consulta:** consultas de lectura; no puede insertar, actualizar ni borrar.
 - **rol_administracion / usuario_admin:** administra las tablas del proyecto y puede crear objetos en el esquema public.
 
-Las contraseñas se reciben como variables de psql desde el entorno local. No se guardan en SQL, Python, Compose ni en Git.
+Las contraseñas predeterminadas son públicas y están definidas directamente en el proyecto para facilitar la ejecución local de la práctica. No se necesita crear un archivo `.env` ni definir variables de entorno.
+
+| Usuario | Contraseña | Uso |
+|---|---|---|
+| postgres | `postgres_demo_2026` | Administrador inicial de PostgreSQL. |
+| usuario_app | `app_demo_2026` | Carga y modificación de registros. |
+| usuario_consulta | `consulta_demo_2026` | Consultas de solo lectura. |
+| usuario_admin | `admin_demo_2026` | Administración de tablas y objetos en public. |
+
+Para cambiar contraseñas, edita `compose.yaml` para el usuario postgres y `practica4/permisos.sql` para los tres usuarios de la práctica. Si cambias la contraseña de `usuario_app`, actualízala también en `practica4/poblar/poblar.py` y `practica4/poblar/comparar-copy-insert.py`. Ejecuta de nuevo `permisos.sql` para aplicar los cambios de los tres usuarios. Estas claves son únicamente para una base local de demostración; no deben reutilizarse en producción.
 
 ## Matriz de permisos
 
@@ -28,22 +37,14 @@ La administración recibe la propiedad de las tablas del proyecto y puede crear 
 
 ## Crear los usuarios
 
-En PowerShell, define tres contraseñas distintas en la sesión actual:
+Las contraseñas ya están definidas en `practica4/permisos.sql`. Ejecuta el script desde `Estructura-principal`:
 
 ```powershell
-$env:APP_DB_PASSWORD = "CLAVE_LOCAL_APP"
-$env:CONSULTA_DB_PASSWORD = "CLAVE_LOCAL_CONSULTA"
-$env:ADMIN_DB_PASSWORD = "CLAVE_LOCAL_ADMIN"
 docker compose cp .\\practica4\\permisos.sql db:/tmp/permisos.sql
-docker compose exec -T db psql -U postgres -d ventas_industriales -v APP_DB_PASSWORD="$env:APP_DB_PASSWORD" -v CONSULTA_DB_PASSWORD="$env:CONSULTA_DB_PASSWORD" -v ADMIN_DB_PASSWORD="$env:ADMIN_DB_PASSWORD" -f /tmp/permisos.sql
+docker compose exec -T db psql -U postgres -d ventas_industriales -v ON_ERROR_STOP=1 -f /tmp/permisos.sql
 ```
 
-Después de crear los usuarios, el script de carga debe conectarse con usuario_app, por medio de DATABASE_URL:
-
-```powershell
-$env:DATABASE_URL = "postgresql://usuario_app:$env:APP_DB_PASSWORD@localhost:5434/ventas_industriales"
-py .\\practica4\\poblar\\poblar.py
-```
+El cargador y el benchmark utilizan automáticamente `usuario_app` con la contraseña predeterminada. No es necesario establecer `DATABASE_URL` ni variables de entorno.
 
 ## Pruebas
 
