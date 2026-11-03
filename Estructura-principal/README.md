@@ -163,6 +163,8 @@ Si PowerShell impide activar el entorno virtual, puedes instalar las dependencia
 
 ~~~powershell
 .\.venv\Scripts\python.exe -m pip install -r .\practica4\poblar\requirements.txt
+.\.venv\Scripts\python.exe .\practica4\poblar\poblar.py
+.\.venv\Scripts\python.exe .\practica4\poblar\comparar-copy-insert.py
 ~~~
 
 ### Paso 8. Configurar la conexión del cargador
