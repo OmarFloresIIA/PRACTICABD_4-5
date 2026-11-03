@@ -155,11 +155,11 @@ En la misma ventana de PowerShell, crea y activa un entorno virtual e instala la
 ~~~powershell
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-py -m pip install --upgrade pip
-py -m pip install -r .\practica4\poblar\requirements.txt
+python -m pip install --upgrade pip
+python -m pip install -r .\practica4\poblar\requirements.txt
 ~~~
 
-Si PowerShell impide activar el entorno virtual, puedes instalar las dependencias mediante la ruta del entorno:
+Si PowerShell impide activar el entorno virtual, puedes instalar las dependencias y ejecutar los programas usando directamente el intérprete del entorno:
 
 ~~~powershell
 .\.venv\Scripts\python.exe -m pip install -r .\practica4\poblar\requirements.txt
@@ -188,7 +188,7 @@ No escribas la contraseña dentro de poblar.py ni en ningún archivo del reposit
 Confirma que el archivo Excel está en practica4\datos y ejecuta:
 
 ~~~powershell
-py .\practica4\poblar\poblar.py
+python .\practica4\poblar\poblar.py
 ~~~
 
 El programa:
@@ -215,7 +215,7 @@ En esta segunda ejecución, las claves ya existentes deben aparecer como registr
 Con el Excel y la conexión todavía disponibles, ejecuta:
 
 ~~~powershell
-py .\practica4\poblar\comparar-copy-insert.py
+python .\practica4\poblar\comparar-copy-insert.py
 ~~~
 
 El programa mide INSERT individual y COPY usando los mismos 1,500 renglones de la hoja detalle. Guarda los tiempos que muestre tu equipo: dependen del hardware y del entorno, por lo que no se incluyen valores inventados en los documentos.
