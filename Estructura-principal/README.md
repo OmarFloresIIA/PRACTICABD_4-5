@@ -53,19 +53,28 @@ Comprueba que el archivo exista en esa ubicación antes de continuar. Si no est�
 
 Los registros son sintéticos. El equipo modificó y abstrajo la estructura de referencia de una base privada, explicó el modelo a Claude (Anthropic) y Claude colaboró en la generación aleatoria y controlada de los registros. No se incluyen datos privados de la empresa original. La explicación completa está en practica4/fuente.md.
 
-### Paso 3. Configurar PostgreSQL
+### Paso 3. Credenciales predeterminadas
 
-Crea el archivo local .env a partir del ejemplo:
+El proyecto propio ya incluye credenciales de demostración. **No necesitas crear un archivo .env ni definir variables en PowerShell.** Los usuarios y contraseñas son públicos porque este repositorio está diseñado para una práctica académica local.
 
-~~~powershell
-Copy-Item .env.example .env
-notepad .env
-~~~
+| Usuario | Contraseña predeterminada | Función |
+|---|---|---|
+| postgres | `postgres_demo_2026` | Administrador inicial de PostgreSQL; ejecuta migraciones y crea los demás usuarios. |
+| usuario_app | `app_demo_2026` | Carga el Excel y puede consultar, insertar, actualizar y borrar registros. |
+| usuario_consulta | `consulta_demo_2026` | Solo puede consultar las tablas. |
+| usuario_admin | `admin_demo_2026` | Administra las tablas y crea objetos en el esquema public, sin ser superusuario. |
 
-Dentro de .env, reemplaza el valor de POSTGRES_PASSWORD por una contraseña local que tú elijas. Guarda el archivo.
+Las credenciales están definidas en estos archivos:
 
-**No subas .env a GitHub ni compartas su contenido.** Está excluido mediante .gitignore.
+- `compose.yaml`: contraseña del usuario `postgres`.
+- `practica4/permisos.sql`: contraseñas de `usuario_app`, `usuario_consulta` y `usuario_admin`.
+- `practica4/poblar/poblar.py` y `practica4/poblar/comparar-copy-insert.py`: datos de conexión del usuario `usuario_app`. Si cambias su contraseña, actualízala en los tres archivos donde aparece.
 
+**Seguridad:** estas son credenciales públicas para una base local desechable. No las reutilices en servidores, proyectos reales ni bases con información privada. El puerto de PostgreSQL queda publicado únicamente en `127.0.0.1`.
+
+Si ya habías creado el volumen de PostgreSQL con una contraseña anterior, Docker conservará la contraseña antigua. Para empezar de nuevo con las credenciales predeterminadas, elimina el volumen con `docker compose down -v` antes de volver a iniciar. Este comando borra los datos locales de esa base.
+
+### Paso 4. Iniciar el servidor de base de datos
 ### Paso 4. Iniciar el servidor de base de datos
 
 Asegúrate de que Docker Desktop esté abierto. Desde Estructura-principal ejecuta:
@@ -123,31 +132,24 @@ Si PostgreSQL muestra un error, detente y revisa el mensaje antes de continuar. 
 
 ### Paso 6. Crear los usuarios y permisos
 
-La práctica utiliza tres usuarios: uno para cargar y modificar datos, uno de solo lectura y uno de administración de las tablas. Define tres contraseñas distintas en la sesión actual de PowerShell. Sustituye los textos de ejemplo por claves propias:
+Los tres usuarios y sus contraseñas ya están definidos en `practica4/permisos.sql`. Ejecuta el script directamente; no tienes que definir variables de entorno ni escribir contraseñas:
 
 ~~~powershell
-$env:APP_DB_PASSWORD = "TU_CLAVE_PARA_USUARIO_APP"
-$env:CONSULTA_DB_PASSWORD = "TU_CLAVE_PARA_USUARIO_CONSULTA"
-$env:ADMIN_DB_PASSWORD = "TU_CLAVE_PARA_USUARIO_ADMIN"
+docker compose cp .\\practica4\\permisos.sql db:/tmp/permisos.sql
+docker compose exec -T db psql -U postgres -d ventas_industriales -v ON_ERROR_STOP=1 -f /tmp/permisos.sql
 ~~~
 
-Copia y ejecuta el script de permisos:
+El script crea o actualiza estos usuarios:
 
-~~~powershell
-docker compose cp .\practica4\permisos.sql db:/tmp/permisos.sql
-docker compose exec -T db psql -U postgres -d ventas_industriales -v "APP_DB_PASSWORD=$env:APP_DB_PASSWORD" -v "CONSULTA_DB_PASSWORD=$env:CONSULTA_DB_PASSWORD" -v "ADMIN_DB_PASSWORD=$env:ADMIN_DB_PASSWORD" -f /tmp/permisos.sql
-~~~
+| Usuario | Contraseña | Función |
+|---|---|---|
+| usuario_app | `app_demo_2026` | Leer, insertar, actualizar y borrar registros. Es el usuario que utiliza el cargador. |
+| usuario_consulta | `consulta_demo_2026` | Consultar las tablas, sin modificar información. |
+| usuario_admin | `admin_demo_2026` | Administrar las tablas y crear objetos en el esquema public, sin ser superusuario ni poder crear otros roles. |
 
-El script crea estos usuarios:
+La matriz completa está en `practica4/permisos.md`. Para cambiar las contraseñas, edita los valores indicados en el Paso 3 y vuelve a ejecutar este script para aplicar los cambios a los usuarios existentes.
 
-| Usuario | Función |
-|---|---|
-| usuario_app | Leer, insertar, actualizar y borrar registros. Es el usuario que utiliza el cargador. |
-| usuario_consulta | Consultar las tablas, sin modificar información. |
-| usuario_admin | Administrar las tablas y crear objetos en el esquema public, sin ser superusuario ni poder crear otros roles. |
-
-La matriz completa está en practica4/permisos.md. Las contraseñas no se escriben en los archivos SQL ni en el repositorio.
-
+### Paso 7. Preparar Python
 ### Paso 7. Preparar Python
 
 En la misma ventana de PowerShell, crea y activa un entorno virtual e instala las dependencias:
@@ -167,24 +169,13 @@ Si PowerShell impide activar el entorno virtual, puedes instalar las dependencia
 .\.venv\Scripts\python.exe .\practica4\poblar\comparar-copy-insert.py
 ~~~
 
-### Paso 8. Configurar la conexión del cargador
+### Paso 8. Conexión automática del cargador
 
-El cargador utiliza por defecto el usuario usuario_app, la base ventas_industriales, el servidor localhost y el puerto 5434.
+El cargador y el benchmark ya utilizan las credenciales predeterminadas de `usuario_app`, la base `ventas_industriales`, el servidor `127.0.0.1` y el puerto `5434`. No necesitas configurar `DATABASE_URL`, `APP_DB_PASSWORD` ni ninguna otra variable de entorno.
 
-En la misma sesión de PowerShell donde definiste las contraseñas, confirma que está definida la contraseña de la aplicación:
+Si cambias la contraseña de `usuario_app`, recuerda actualizarla tanto en `practica4/permisos.sql` como en los dos programas Python indicados en el Paso 3. Si cambias el puerto publicado en `compose.yaml`, actualiza también el puerto en esos programas.
 
-~~~powershell
-$env:APP_DB_PASSWORD = "LA_MISMA_CLAVE_PARA_USUARIO_APP"
-~~~
-
-Si anteriormente definiste una variable DATABASE_URL con otra conexión, elimínala para que el programa utilice APP_DB_PASSWORD:
-
-~~~powershell
-Remove-Item Env:DATABASE_URL -ErrorAction SilentlyContinue
-~~~
-
-No escribas la contraseña dentro de poblar.py ni en ningún archivo del repositorio.
-
+### Paso 9. Cargar el Excel
 ### Paso 9. Cargar el Excel
 
 Confirma que el archivo Excel está en practica4\datos y ejecuta:
@@ -262,7 +253,7 @@ Las pruebas contienen operaciones temporales y bloques de ROLLBACK para no mezcl
 
 ## 3. Proyecto asignado: Obra Pública Municipal
 
-Este proyecto utiliza **otra base de datos y otro repositorio**. No cargues el Excel de ventas industriales en el almacén de obras públicas.
+Este proyecto utiliza **otra base de datos y otro repositorio**. No cargues el Excel de ventas industriales en el almacén de obras públicas. La eliminación de `.env` descrita arriba corresponde al proyecto propio; el repositorio asignado conserva su configuración independiente.
 
 Repositorio: https://github.com/OmarFloresIIA/PublicMunicipalWorks_DWH
 
@@ -381,7 +372,7 @@ El archivo evidencias/README.md contiene la lista de capturas sugeridas.
 
 **Docker no responde:** abre Docker Desktop, espera a que indique que está iniciado y vuelve a ejecutar docker compose ps.
 
-**El puerto 5434 está ocupado:** revisa qué aplicación utiliza ese puerto. Si cambias el puerto publicado en compose.yaml, actualiza también DB_PORT en la sesión de PowerShell para que Python se conecte al nuevo puerto.
+**El puerto 5434 está ocupado:** revisa qué aplicación utiliza ese puerto. Si cambias el puerto publicado en `compose.yaml`, actualiza también el puerto predeterminado en `practica4/poblar/poblar.py` y `practica4/poblar/comparar-copy-insert.py`.
 
 **El cargador no encuentra el Excel:** confirma que estás dentro de Estructura-principal y que el archivo se llama exactamente base_datos_pedidos2.xlsx dentro de practica4\datos.
 
@@ -389,7 +380,7 @@ El archivo evidencias/README.md contiene la lista de capturas sugeridas.
 
 **Una migración indica que una columna o restricción ya existe:** probablemente ya la ejecutaste. No la vuelvas a correr sobre la misma base. Revisa el estado de la base antes de continuar.
 
-**La contraseña no funciona:** comprueba que las variables APP_DB_PASSWORD, CONSULTA_DB_PASSWORD y ADMIN_DB_PASSWORD siguen definidas en la sesión de PowerShell en la que estás trabajando. Las variables de entorno se pierden al cerrar esa terminal.
+**La contraseña no funciona:** revisa que estás usando las credenciales predeterminadas de esta guía. Si ya existía un volumen de PostgreSQL, puede conservar una contraseña anterior; para recrear la base con los valores predeterminados, utiliza `docker compose down -v` y vuelve a iniciar el servicio. Recuerda que ese comando borra los datos locales.
 
 **Necesitas iniciar el proyecto propio desde cero:** recuerda que docker compose down -v borra el volumen y todos los datos locales de esa base. Úsalo solo cuando hayas decidido que puedes perderlos.
 

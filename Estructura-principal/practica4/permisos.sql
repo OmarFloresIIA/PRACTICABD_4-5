@@ -1,18 +1,5 @@
-\if :{?APP_DB_PASSWORD}
-\else
-  \echo 'Falta pasar -v APP_DB_PASSWORD=...'
-  \quit
-\endif
-\if :{?CONSULTA_DB_PASSWORD}
-\else
-  \echo 'Falta pasar -v CONSULTA_DB_PASSWORD=...'
-  \quit
-\endif
-\if :{?ADMIN_DB_PASSWORD}
-\else
-  \echo 'Falta pasar -v ADMIN_DB_PASSWORD=...'
-  \quit
-\endif
+-- Credenciales públicas de demostración para el entorno local de la práctica.
+-- Si se modifican, actualiza también APP_DB_PASSWORD en los dos scripts Python.
 
 -- Roles de grupo: no pueden iniciar sesión directamente.
 SELECT 'CREATE ROLE rol_aplicacion NOLOGIN'
@@ -22,19 +9,18 @@ WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'rol_consulta') \gexec
 SELECT 'CREATE ROLE rol_administracion NOLOGIN'
 WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'rol_administracion') \gexec
 
--- Usuarios de conexión. Las contraseñas llegan desde variables de entorno
--- pasadas a psql; nunca se escriben en este archivo ni en Git.
-SELECT format('CREATE ROLE usuario_app LOGIN PASSWORD %L', :'APP_DB_PASSWORD')
+-- Usuarios de conexión con contraseñas predeterminadas.
+SELECT 'CREATE ROLE usuario_app LOGIN PASSWORD ''app_demo_2026'''
 WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'usuario_app') \gexec
-ALTER ROLE usuario_app WITH LOGIN PASSWORD :'APP_DB_PASSWORD';
+ALTER ROLE usuario_app WITH LOGIN PASSWORD 'app_demo_2026';
 
-SELECT format('CREATE ROLE usuario_consulta LOGIN PASSWORD %L', :'CONSULTA_DB_PASSWORD')
+SELECT 'CREATE ROLE usuario_consulta LOGIN PASSWORD ''consulta_demo_2026'''
 WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'usuario_consulta') \gexec
-ALTER ROLE usuario_consulta WITH LOGIN PASSWORD :'CONSULTA_DB_PASSWORD';
+ALTER ROLE usuario_consulta WITH LOGIN PASSWORD 'consulta_demo_2026';
 
-SELECT format('CREATE ROLE usuario_admin LOGIN PASSWORD %L', :'ADMIN_DB_PASSWORD')
+SELECT 'CREATE ROLE usuario_admin LOGIN PASSWORD ''admin_demo_2026'''
 WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'usuario_admin') \gexec
-ALTER ROLE usuario_admin WITH LOGIN PASSWORD :'ADMIN_DB_PASSWORD';
+ALTER ROLE usuario_admin WITH LOGIN PASSWORD 'admin_demo_2026';
 
 GRANT rol_aplicacion TO usuario_app;
 GRANT rol_consulta TO usuario_consulta;

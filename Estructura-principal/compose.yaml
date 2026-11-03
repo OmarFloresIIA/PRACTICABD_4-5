@@ -5,9 +5,9 @@ services:
     environment:
       POSTGRES_DB: ventas_industriales
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Crea .env a partir de .env.example}
+      POSTGRES_PASSWORD: "postgres_demo_2026"
     ports:
-      - "5434:5432"
+      - "127.0.0.1:5434:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./esquema.sql:/docker-entrypoint-initdb.d/01-esquema.sql:ro
