@@ -2,17 +2,15 @@
 
 ## Fuente seleccionada y procedencia
 
-La fuente principal de esta práctica es el archivo **base_datos_pedidos2.xlsx**, proporcionado por el equipo. Contiene una base relacional sintética para una empresa que comercializa tres líneas de productos industriales: OMNIGOLD, HYVOLT y HYPRENE.
+La fuente principal de esta práctica es el archivo [**base_datos_pedidos2.xlsx**](), proporcionado por el equipo. Contiene una base relacional sintética para una empresa que comercializa tres líneas de productos industriales: OMNIGOLD, HYVOLT y HYPRENE.
 
 El equipo tomó como referencia la estructura de una base de datos que pertenecía a una empresa privada. Para no divulgar la información de esa empresa, se modificó y abstrajo el modelo: se conservaron las entidades, los atributos y las relaciones necesarios para representar el dominio, pero los registros utilizados en esta práctica son inventados. Después se explicó a **Claude (Anthropic), como colaborador de IA generativa**, la estructura modificada y las reglas de cada entidad para que apoyara la creación aleatoria y controlada de los datos.
 
 La hoja Notas del archivo también indica que los registros son inventados y que se generaron a partir del diccionario de dominios. Por tanto, el Excel no es una exportación de ventas reales ni un conjunto de datos público. Claude se menciona como herramienta colaboradora en la generación, no como autor de datos comerciales reales ni como proveedor de una licencia.
 
-## Referencia y licencia
+## Referencia
 
-Referencia APA 7 para identificar el archivo de trabajo:
-
-Equipo del proyecto. (2026). *Base de datos sintética de pedidos* [Archivo de datos XLSX no publicado; generación asistida por Claude (Anthropic)].
+Equipo del proyecto. (2026). *Base de datos sintética de pedidos* [Archivo de datos XLSX no publicado; generación asistida por Claude (Anthropic)]. Escuela Superior de Cómputo, Instituto Politécnico Nacional.
 
 El archivo no fue publicado por una institución y no cuenta con una licencia abierta de datos. Su uso es académico dentro del proyecto. La estructura de la base privada que sirvió como referencia no se redistribuye; se utiliza únicamente el modelo abstraído y los registros sintéticos.
 
@@ -40,8 +38,7 @@ El archivo no fue publicado por una institución y no cuenta con una licencia ab
 
 La hoja Notas tiene doce renglones de explicación y no se importa como tabla.
 
-**Aclaración sobre los conteos:** esta versión del Excel contiene 80 clientes y 30 transportistas. Aunque en una conversación se mencionaron 100 clientes y 50 transportistas, se toma como fuente de verdad el contenido comprobado del archivo: 80 y 30, respectivamente. El resto de las cantidades se documenta con el mismo criterio.
-
+**Aclaración sobre mo:** 
 ## Correspondencia entre la fuente y el esquema
 
 Las siete hojas relacionales corresponden directamente a las siete tablas del esquema. Sus encabezados se conservan como atributos equivalentes, normalizados a minúsculas al insertarse en PostgreSQL. No se descartan campos de las tablas. La hoja Notas se conserva como documentación y no se importa.
